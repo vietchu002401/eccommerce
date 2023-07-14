@@ -51,9 +51,9 @@ public class CustomerController {
         return cartService.addToCart(cartItem);
     }
 
-    @DeleteMapping("/cart/remove-product/{productId}")
-    public ResponseEntity<ResponseData> deleteCartItem(@PathVariable Long productId){
-        return cartService.deleteCartItem(productId);
+    @DeleteMapping("/cart/remove-product/{cartItemId}")
+    public ResponseEntity<ResponseData> deleteCartItem(@PathVariable Long cartItemId){
+        return cartService.deleteCartItem(cartItemId);
     }
 
     @GetMapping("/cart/product-list/{cartId}")

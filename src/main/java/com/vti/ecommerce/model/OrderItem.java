@@ -33,6 +33,8 @@ public class OrderItem {
     @NonNull
     private Long orderId;
 
+    private Double subTotal;
+
     private int quantity;
 
     @Temporal(TemporalType.TIMESTAMP)

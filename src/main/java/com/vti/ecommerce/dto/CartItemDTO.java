@@ -24,6 +24,8 @@ public class CartItemDTO {
 
     private int quantity;
 
+    private Double subTotal;
+
     private Date createdDate;
 
     private Date updatedDate;

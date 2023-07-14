@@ -33,6 +33,8 @@ public class Order {
     @NonNull
     private Long userPaymentId;
 
+    private Double totalPrice;
+
     private boolean status;
 
     @Temporal(TemporalType.TIMESTAMP)

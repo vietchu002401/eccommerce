@@ -33,6 +33,8 @@ public class CartItem {
     @NonNull
     private Long cartId;
 
+    private Double subTotal;
+
     private int quantity;
 
     @Temporal(TemporalType.TIMESTAMP)

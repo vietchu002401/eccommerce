@@ -26,6 +26,8 @@ public class OrderDTO {
 
     private boolean status;
 
+    private Double totalPrice;
+
     private List<OrderItem> items;
 
     private Date createdDate;

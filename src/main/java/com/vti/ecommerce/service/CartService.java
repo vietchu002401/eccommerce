@@ -38,6 +38,7 @@ public class CartService {
                 .id(cartItem.getId())
                 .product(productOptional.isPresent() ? productOptional.get() : null)
                 .cartId(cartItem.getCartId())
+                .subTotal(cartItem.getSubTotal())
                 .quantity(cartItem.getQuantity())
                 .createdDate(cartItem.getCreatedDate())
                 .updatedDate(cartItem.getUpdatedDate())
@@ -67,13 +68,20 @@ public class CartService {
 
     public ResponseEntity<ResponseData> addToCart(CartItem cartItem) {
         try {
+            Optional<Product> productOptional = productRepository.findById(cartItem.getProductId());
+            if(productOptional.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Product not found", null));
+            }
+            Product product = productOptional.get();
             Optional<CartItem> cartItemOptional = cartItemRepository.findByProductIdAndCartId(cartItem.getProductId(), cartItem.getCartId());
             if (cartItemOptional.isPresent()) {
                 CartItem c = cartItemOptional.get();
                 c.setQuantity(c.getQuantity() + cartItem.getQuantity());
+                c.setSubTotal(c.getSubTotal() + cartItem.getQuantity()*product.getPrice());
                 c.setUpdatedDate(new Date());
                 return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Add successfully", cartItemRepository.save(c)));
             }
+            cartItem.setSubTotal(cartItem.getQuantity()*product.getPrice());
             cartItem.setCreatedDate(new Date());
             cartItem.setUpdatedDate(new Date());
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Add successfully", cartItemRepository.save(cartItem)));
@@ -84,9 +92,9 @@ public class CartService {
         }
     }
 
-    public ResponseEntity<ResponseData> deleteCartItem(Long productId) {
+    public ResponseEntity<ResponseData> deleteCartItem(Long cartItemId) {
         try {
-            Optional<CartItem> cartItemOptional = cartItemRepository.findByProductId(productId);
+            Optional<CartItem> cartItemOptional = cartItemRepository.findById(cartItemId);
             if (cartItemOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Item not found", null));
             }
@@ -133,7 +141,10 @@ public class CartService {
                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart item not found", null));
            }
            CartItem cartItem = cartItemOptional.get();
+           Optional<Product> productOptional = productRepository.findById(cartItem.getProductId());
+           Product product = productOptional.get();
            cartItem.setQuantity(cartItem.getQuantity() + Integer.valueOf(quantity));
+           cartItem.setSubTotal(cartItem.getSubTotal() + product.getPrice()*Double.valueOf(quantity));
            cartItem.setUpdatedDate(new Date());
            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Added quantity", cartItemRepository.save(cartItem)));
         } catch (Exception e) {

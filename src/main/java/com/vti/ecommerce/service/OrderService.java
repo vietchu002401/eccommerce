@@ -81,17 +81,22 @@ public class OrderService {
                 .updatedDate(new Date())
                 .build();
             Order newOrder = orderRepository.save(order);
+            Double totalPrice = (double) 0;
             for(CartItem cartItem : cartItemList){
                 OrderItem orderItem = OrderItem.builder()
                     .productId(cartItem.getProductId())
                     .orderId(newOrder.getId())
                     .quantity(cartItem.getQuantity())
+                    .subTotal(cartItem.getSubTotal())
                     .createdDate(new Date())
                     .updatedDate(new Date())
                     .build();
                 orderItemRepository.save(orderItem);
+                cartItemRepository.deleteById(cartItem.getId());
+                totalPrice+=orderItem.getSubTotal();
             }
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Order successfully", order));
+            newOrder.setTotalPrice(totalPrice);
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Order successfully", orderRepository.save(newOrder)));
         }catch (Exception e){
             return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -126,6 +131,7 @@ public class OrderService {
                 .userId(order.getUserId())
                 .userPayment(userPayment.get())
                 .status(order.isStatus())
+                .totalPrice(order.getTotalPrice())
                 .items(orderItems)
                 .createdDate(order.getCreatedDate())
                 .updatedDate(order.getUpdatedDate())
