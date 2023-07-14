@@ -1,7 +1,6 @@
 package com.vti.ecommerce.customerController;
 
 import com.vti.ecommerce.model.CartItem;
-import com.vti.ecommerce.model.Order;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.service.CartService;
 import com.vti.ecommerce.service.CustomerService;

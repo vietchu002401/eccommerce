@@ -4,6 +4,7 @@ import com.vti.ecommerce.dto.ProductDTO;
 import com.vti.ecommerce.model.Category;
 import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.repository.CategoryRepository;
+import com.vti.ecommerce.repository.OrderItemRepository;
 import com.vti.ecommerce.repository.ProductRepository;
 import com.vti.ecommerce.response.ResponseData;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ public class ProductService {
     private ProductRepository productRepository;
     @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     private static List<ProductDTO> convertToProductDTO(List<Product> products, List<Category> categories){
         List<ProductDTO> productDTOS = new ArrayList<>();
@@ -167,6 +170,16 @@ public class ProductService {
             return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        }
+    }
+
+    public ResponseEntity<ResponseData> getBestSeller() {
+        try{
+            List<Product> products = productRepository.findBestSeller();
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", products));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 }

@@ -25,16 +25,21 @@ import java.util.Date;
 public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @NonNull
+    @Column(name = "product_id")
     private Long productId;
 
     @NonNull
+    @Column(name = "order_id")
     private Long orderId;
 
+    @Column(name = "sub_total")
     private Double subTotal;
 
+    @Column(name = "quantity")
     private int quantity;
 
     @Temporal(TemporalType.TIMESTAMP)

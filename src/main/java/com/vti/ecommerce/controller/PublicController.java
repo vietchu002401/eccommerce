@@ -33,4 +33,10 @@ public class PublicController {
     public ResponseEntity<ResponseData> searchByKeyword(@RequestParam String q){
         return productService.searchProduct(q);
     }
+
+    @GetMapping("/best-sales")
+    public ResponseEntity<ResponseData> getBestSeller(){
+        return productService.getBestSeller();
+    }
+
 }

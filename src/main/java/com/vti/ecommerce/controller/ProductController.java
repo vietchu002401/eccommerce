@@ -1,12 +1,8 @@
 package com.vti.ecommerce.controller;
 
-import com.vti.ecommerce.config.JwtService;
-import com.vti.ecommerce.dto.ProductDTO;
 import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.service.ProductService;
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/admin/product")

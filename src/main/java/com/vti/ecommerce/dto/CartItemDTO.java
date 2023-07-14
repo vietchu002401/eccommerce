@@ -1,9 +1,6 @@
 package com.vti.ecommerce.dto;
 
 import com.vti.ecommerce.model.Product;
-import jakarta.persistence.Column;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
