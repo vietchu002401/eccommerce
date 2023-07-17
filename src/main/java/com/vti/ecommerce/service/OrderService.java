@@ -5,10 +5,12 @@ import com.vti.ecommerce.dto.OrderDTO;
 import com.vti.ecommerce.model.CartItem;
 import com.vti.ecommerce.model.Order;
 import com.vti.ecommerce.model.OrderItem;
+import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.model.UserPayment;
 import com.vti.ecommerce.repository.CartItemRepository;
 import com.vti.ecommerce.repository.OrderItemRepository;
 import com.vti.ecommerce.repository.OrderRepository;
+import com.vti.ecommerce.repository.ProductRepository;
 import com.vti.ecommerce.repository.UserPaymentRepository;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.user.User;
@@ -38,6 +40,8 @@ public class OrderService {
     private CartItemRepository cartItemRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
     private static List<OrderDTO> convertToOrderDTO(List<Order> orders, List<UserPayment> userPayments){
         List<OrderDTO> orderDTOS = new ArrayList<>();
@@ -73,6 +77,15 @@ public class OrderService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User payment not found", null));
             }
             List<CartItem> cartItemList = cartItemRepository.findCartItemByIdIn(cartItemId);
+            if(cartItemList.size() == 0){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "No item found", null));
+            }
+            for(CartItem cartItem : cartItemList){
+                Optional<Product> product = productRepository.findWhereAmountNotEnough(cartItem.getProductId(), cartItem.getQuantity());
+                if(product.isPresent()){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, product.get().getName() + " has only " + product.get().getAmount() + " items left", null));
+                }
+            }
             Order order = Order.builder()
                 .userId(user.getId())
                 .userPaymentId(userPaymentOptional.get().getId())

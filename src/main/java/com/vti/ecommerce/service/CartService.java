@@ -79,7 +79,13 @@ public class CartService {
                 c.setQuantity(c.getQuantity() + cartItem.getQuantity());
                 c.setSubTotal(c.getSubTotal() + cartItem.getQuantity()*product.getPrice());
                 c.setUpdatedDate(new Date());
+                if(product.getAmount() < c.getQuantity()){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, "The product has only " + product.getAmount() + " items left", null));
+                }
                 return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Add successfully", cartItemRepository.save(c)));
+            }
+            if(product.getAmount() < cartItem.getQuantity()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, "The product has only " + product.getAmount() + " items left", null));
             }
             cartItem.setSubTotal(cartItem.getQuantity()*product.getPrice());
             cartItem.setCreatedDate(new Date());

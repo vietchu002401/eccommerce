@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -20,4 +21,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByIdIn(List<Long> productIds);
     @Query(value = "SELECT product.* FROM product JOIN (SELECT product_id, SUM(quantity) AS totalQuantity FROM order_item GROUP BY product_id ORDER BY totalQuantity DESC LIMIT 5) AS top_products ON product.id = top_products.product_id", nativeQuery = true)
     List<Product> findBestSeller();
+
+    @Query(value = "SELECT * FROM product WHERE id = %:productId% AND amount < %:quantity%", nativeQuery = true)
+    Optional<Product> findWhereAmountNotEnough(@Param("productId") Long productId,
+                                               @Param("quantity") int quantity);
 }
