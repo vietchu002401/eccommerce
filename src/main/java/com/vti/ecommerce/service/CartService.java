@@ -140,19 +140,19 @@ public class CartService {
         }
     }
 
-    public ResponseEntity<ResponseData> addQuantityToCart(String cartItemId, String quantity) {
+    public ResponseEntity<ResponseData> updateQuantity(String cartItemId, String quantity) {
         try {
-           Optional<CartItem> cartItemOptional = cartItemRepository.findById(Long.valueOf(cartItemId));
-           if(cartItemOptional.isEmpty()){
-               return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart item not found", null));
-           }
-           CartItem cartItem = cartItemOptional.get();
-           Optional<Product> productOptional = productRepository.findById(cartItem.getProductId());
-           Product product = productOptional.get();
-           cartItem.setQuantity(cartItem.getQuantity() + Integer.valueOf(quantity));
-           cartItem.setSubTotal(cartItem.getSubTotal() + product.getPrice()*Double.valueOf(quantity));
-           cartItem.setUpdatedDate(new Date());
-           return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Added quantity", cartItemRepository.save(cartItem)));
+//           Optional<CartItem> cartItemOptional = cartItemRepository.findById(Long.valueOf(cartItemId));
+//           if(cartItemOptional.isEmpty()){
+//               return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart item not found", null));
+//           }
+//           CartItem cartItem = cartItemOptional.get();
+//           Optional<Product> productOptional = productRepository.findById(cartItem.getProductId());
+//           Product product = productOptional.get();
+//           cartItem.setQuantity(cartItem.getQuantity() + Integer.valueOf(quantity));
+//           cartItem.setSubTotal(cartItem.getSubTotal() + product.getPrice()*Double.valueOf(quantity));
+//           cartItem.setUpdatedDate(new Date());
+           return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Added quantity", cartItemRepository.updateQuantity(Integer.valueOf(quantity), Long.valueOf(cartItemId))));
         } catch (Exception e) {
             return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

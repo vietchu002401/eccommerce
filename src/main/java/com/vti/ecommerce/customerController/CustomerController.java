@@ -62,7 +62,7 @@ public class CustomerController {
 
     @PostMapping("/add-quantity")
     public ResponseEntity<ResponseData> addQuantityToCart(@RequestParam String cartItemId, String quantity){
-        return cartService.addQuantityToCart(cartItemId, quantity);
+        return cartService.updateQuantity(cartItemId, quantity);
     }
 
     @PostMapping("/order")
