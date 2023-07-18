@@ -30,8 +30,7 @@ public class UserPayment {
     @NonNull
     private Long userId;
 
-    @NonNull
-    private String paymentType;
+    private String numberCart;
 
     @NonNull
     private String provider;

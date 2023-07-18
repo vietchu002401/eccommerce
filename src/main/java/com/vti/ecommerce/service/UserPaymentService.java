@@ -39,7 +39,7 @@ public class UserPaymentService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User payment not found", null));
             }
             UserPayment u = userPaymentOptional.get();
-            u.setPaymentType(userPayment.getPaymentType());
+            u.setNumberCart(userPayment.getNumberCart());
             u.setProvider(userPayment.getProvider());
             u.setUpdatedDate(new Date());
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Updated user payment", userPaymentRepository.save(u)));

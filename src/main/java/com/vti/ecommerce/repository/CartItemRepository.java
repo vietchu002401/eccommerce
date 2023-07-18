@@ -26,4 +26,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
     @Transactional
     Integer updateQuantity(@Param("quantity") Integer quantity,
                         @Param("cartItemId") Long cartItemId);
+
+    Optional<CartItem> findByProductId(Long productId);
 }

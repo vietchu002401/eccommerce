@@ -30,6 +30,8 @@ public class Cart {
     @NonNull
     private Long userId;
 
+    private boolean status;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_date")
     private Date createdDate;

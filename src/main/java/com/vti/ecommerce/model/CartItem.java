@@ -35,6 +35,8 @@ public class CartItem {
 
     private Double subTotal;
 
+    private boolean status;
+
     private int quantity;
 
     @Temporal(TemporalType.TIMESTAMP)

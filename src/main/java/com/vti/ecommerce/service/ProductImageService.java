@@ -20,7 +20,7 @@ public class ProductImageService {
 
     public ResponseEntity<ResponseData> createProductImage(ProductImage productImage) {
         try{
-            if(productImageRepository.existsByProductImageUrl(productImage.getProductImageUrl())){
+            if(productImageRepository.existsBySourceImage(productImage.getSourceImage())){
                 return ResponseEntity.status(HttpStatus.CONFLICT).build();
             }
             productImage.setCreatedDate(new Date());
@@ -49,12 +49,12 @@ public class ProductImageService {
             Optional<ProductImage> productImageOptional = productImageRepository.findById(productImageId);
             if(productImageOptional.isPresent()){
                 ProductImage p = productImageOptional.get();
-                if(p.getProductImageUrl().equals(productImage.getProductImageUrl())){
-                    if(productImageRepository.existsByProductImageUrl(productImage.getProductImageUrl())){
+                if(p.getSourceImage().equals(productImage.getSourceImage())){
+                    if(productImageRepository.existsBySourceImage(productImage.getSourceImage())){
                         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "Url is already exist", productImage));
                     }
                 }
-                p.setProductImageUrl(productImage.getProductImageUrl());
+                p.setSourceImage(productImage.getSourceImage());
                 p.setProductId(productImage.getProductId());
                 p.setUpdatedDate(new Date());
                 return ResponseEntity.ok(new ResponseData(HttpStatus.CONFLICT, "Updated",productImageRepository.save(p)));

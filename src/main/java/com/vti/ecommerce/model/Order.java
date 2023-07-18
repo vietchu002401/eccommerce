@@ -35,7 +35,7 @@ public class Order {
 
     private Double totalPrice;
 
-    private boolean status;
+    private boolean statusShipping;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_date")

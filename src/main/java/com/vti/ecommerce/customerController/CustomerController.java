@@ -45,11 +45,6 @@ public class CustomerController {
         return orderService.getOrderDetail(orderId);
     }
 
-    @PostMapping("/cart/add-product")
-    public ResponseEntity<ResponseData> addToCart(@RequestBody CartItem cartItem){
-        return cartService.addToCart(cartItem);
-    }
-
     @DeleteMapping("/cart/remove-product/{cartItemId}")
     public ResponseEntity<ResponseData> deleteCartItem(@PathVariable Long cartItemId){
         return cartService.deleteCartItem(cartItemId);

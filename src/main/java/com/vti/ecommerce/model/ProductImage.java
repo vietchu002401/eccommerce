@@ -28,7 +28,9 @@ public class ProductImage {
 
     private Long productId;
 
-    private String productImageUrl;
+    private String sourceImage;
+
+    private boolean status;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_date")

@@ -21,7 +21,7 @@ public class CategoryService {
     public ResponseEntity<ResponseData> createCategory(CategoryDTO categoryDTO) {
         try {
             if (categoryRepository.existsByName(categoryDTO.getName())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "Category name is already exist", null));
             }
             Category category = Category.builder()
                 .name(categoryDTO.getName())

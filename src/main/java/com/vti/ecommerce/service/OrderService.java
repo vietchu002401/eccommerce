@@ -52,7 +52,7 @@ public class OrderService {
                         .id(order.getId())
                         .userId(order.getUserId())
                         .userPayment(userPayment)
-                        .status(order.isStatus())
+                        .status(order.isStatusShipping())
                         .createdDate(order.getCreatedDate())
                         .updatedDate(order.getUpdatedDate())
                         .build();
@@ -89,7 +89,7 @@ public class OrderService {
             Order order = Order.builder()
                 .userId(user.getId())
                 .userPaymentId(userPaymentOptional.get().getId())
-                .status(true)
+                .statusShipping(true)
                 .createdDate(new Date())
                 .updatedDate(new Date())
                 .build();
@@ -143,7 +143,7 @@ public class OrderService {
                 .id(order.getId())
                 .userId(order.getUserId())
                 .userPayment(userPayment.get())
-                .status(order.isStatus())
+                .status(order.isStatusShipping())
                 .totalPrice(order.getTotalPrice())
                 .items(orderItems)
                 .createdDate(order.getCreatedDate())

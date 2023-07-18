@@ -1,5 +1,7 @@
 package com.vti.ecommerce.controller;
 
+import com.vti.ecommerce.dto.ProductDTO;
+import com.vti.ecommerce.dto.ProductRequestDTO;
 import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.service.ProductService;
@@ -27,13 +29,13 @@ public class ProductController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ResponseData> createProduct(@RequestBody Product product){
-        return productService.createProduct(product);
+    public ResponseEntity<ResponseData> createProduct(@RequestBody ProductRequestDTO productRequestDTO){
+        return productService.createProduct(productRequestDTO);
     }
 
     @PostMapping("/update/{productId}")
-    public ResponseEntity<ResponseData> updateProduct(@PathVariable Long productId, @RequestBody Product productRequest){
-        return productService.updateProduct(productId, productRequest);
+    public ResponseEntity<ResponseData> updateProduct(@PathVariable Long productId, @RequestBody ProductRequestDTO productRequestDTO){
+        return productService.updateProduct(productId, productRequestDTO);
     }
 
     @DeleteMapping("/delete/{productId}")
@@ -46,12 +48,17 @@ public class ProductController {
         return productService.getProductDetail(productId);
     }
 
+    @PostMapping("/active/{productId}")
+    public ResponseEntity<ResponseData> activeProduct(@PathVariable Long productId){
+        return productService.activeProduct(productId);
+    }
+
     @GetMapping("/search")
     public ResponseEntity<ResponseData> searchProduct(@RequestParam String q){
         return productService.searchProduct(q);
     }
 
-    @GetMapping("/product-list-by-category/{categoryId}")
+    @GetMapping("/find-by-category/{categoryId}")
     public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId){
         return productService.getProductByCategory(categoryId);
     }
