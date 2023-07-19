@@ -1,6 +1,7 @@
 package com.vti.ecommerce.service;
 
 import com.vti.ecommerce.config.JwtService;
+import com.vti.ecommerce.dto.CartDTO;
 import com.vti.ecommerce.dto.OrderDTO;
 import com.vti.ecommerce.model.CartItem;
 import com.vti.ecommerce.model.Order;
@@ -43,28 +44,31 @@ public class OrderService {
     @Autowired
     private ProductRepository productRepository;
 
-    private static List<OrderDTO> convertToOrderDTO(List<Order> orders, List<UserPayment> userPayments){
+    private List<OrderDTO> convertToOrderDTO(List<Order> orders, List<UserPayment> userPayments){
         List<OrderDTO> orderDTOS = new ArrayList<>();
         for(Order order : orders){
             for(UserPayment userPayment : userPayments){
                 if(order.getUserPaymentId().equals(userPayment.getId())){
+                    List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
                     OrderDTO orderDTO = OrderDTO.builder()
                         .id(order.getId())
                         .userId(order.getUserId())
                         .userPayment(userPayment)
-                        .status(order.isStatusShipping())
+                        .orderItemList(orderItems)
+                        .totalPrice(order.getTotalPrice())
+                        .statusShipping(order.isStatusShipping())
                         .createdDate(order.getCreatedDate())
                         .updatedDate(order.getUpdatedDate())
                         .build();
                     orderDTOS.add(orderDTO);
+                    break;
                 }
-                break;
             }
         }
         return orderDTOS;
     }
 
-    public ResponseEntity<ResponseData> createOrder(List<Long> cartItemId, String token){
+    public ResponseEntity<ResponseData> createOrder(CartDTO cartDTO, String token){
         try{
             String username = jwtService.extractUsername(token);
             Optional<User> userOptional = userRepository.findByUsername(username);
@@ -76,7 +80,7 @@ public class OrderService {
             if(userPaymentOptional.isEmpty()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User payment not found", null));
             }
-            List<CartItem> cartItemList = cartItemRepository.findCartItemByIdIn(cartItemId);
+            List<CartItem> cartItemList = cartItemRepository.findCartItemByIdIn(cartDTO.getCartItemList());
             if(cartItemList.size() == 0){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "No item found", null));
             }
@@ -106,10 +110,22 @@ public class OrderService {
                     .build();
                 orderItemRepository.save(orderItem);
                 cartItemRepository.deleteById(cartItem.getId());
+                //Chưa làm trừ amount ở trong product sau khi order
                 totalPrice+=orderItem.getSubTotal();
             }
             newOrder.setTotalPrice(totalPrice);
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Order successfully", orderRepository.save(newOrder)));
+            orderRepository.save(newOrder);
+            List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(newOrder.getId());
+            OrderDTO orderDTO = OrderDTO.builder()
+                .id(newOrder.getId())
+                .userId(newOrder.getUserId())
+                .userPayment(userPaymentOptional.get())
+                .orderItemList(orderItems)
+                .statusShipping(newOrder.isStatusShipping())
+                .createdDate(newOrder.getCreatedDate())
+                .updatedDate(newOrder.getUpdatedDate())
+                .build();
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Order successfully", orderDTO));
         }catch (Exception e){
             return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -143,9 +159,9 @@ public class OrderService {
                 .id(order.getId())
                 .userId(order.getUserId())
                 .userPayment(userPayment.get())
-                .status(order.isStatusShipping())
+                .statusShipping(order.isStatusShipping())
                 .totalPrice(order.getTotalPrice())
-                .items(orderItems)
+                .orderItemList(orderItems)
                 .createdDate(order.getCreatedDate())
                 .updatedDate(order.getUpdatedDate())
                 .build();
@@ -167,9 +183,9 @@ public class OrderService {
             }
             User user = userOptional.get();
             List<Order> orders = orderRepository.findByUserId(user.getId());
-            List<UserPayment> userPayments = userPaymentRepository.findAll();
-            List<OrderDTO> orderDTOS = convertToOrderDTO(orders, userPayments);
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orderDTOS));
+//            List<UserPayment> userPayments = userPaymentRepository.findAll();
+//            List<OrderDTO> orderDTOS = convertToOrderDTO(orders, userPayments);
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orders));
         }catch (Exception e){
             return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

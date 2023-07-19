@@ -6,14 +6,9 @@ import com.vti.ecommerce.model.Category;
 import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.model.ProductImage;
 import com.vti.ecommerce.repository.CategoryRepository;
-import com.vti.ecommerce.repository.OrderItemRepository;
 import com.vti.ecommerce.repository.ProductImageRepository;
 import com.vti.ecommerce.repository.ProductRepository;
 import com.vti.ecommerce.response.ResponseData;
-import jakarta.persistence.Column;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -88,11 +83,13 @@ public class ProductService {
                     .updatedDate(new Date())
                     .build();
             Product productSaved = productRepository.save(product);
-            for(ProductImage productImage : productRequestDTO.getProductImages()){
-                productImage.setProductId(productSaved.getId());
-                productImage.setCreatedDate(new Date());
-                productImage.setUpdatedDate(new Date());
-                productImageRepository.save(productImage);
+            if(productRequestDTO.getProductImages() != null){
+                for(ProductImage productImage : productRequestDTO.getProductImages()){
+                    productImage.setProductId(productSaved.getId());
+                    productImage.setCreatedDate(new Date());
+                    productImage.setUpdatedDate(new Date());
+                    productImageRepository.save(productImage);
+                }
             }
             List<Product> products = new ArrayList<>();
             List<Category> categories = categoryRepository.findAll();

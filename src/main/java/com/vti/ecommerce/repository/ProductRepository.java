@@ -24,7 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         "GROUP BY product_id ORDER BY totalQuantity DESC LIMIT 5) AS top_products ON product.id = top_products.product_id", nativeQuery = true)
     List<Product> findBestSeller();
 
-    @Query(value = "SELECT * FROM product WHERE id = %:productId% AND amount < %:quantity%", nativeQuery = true)
+    @Query(value = "SELECT * FROM product WHERE id = :productId AND amount < :quantity", nativeQuery = true)
     Optional<Product> findWhereAmountNotEnough(@Param("productId") Long productId,
                                                @Param("quantity") int quantity);
 }

@@ -20,7 +20,7 @@ public class UserPaymentService {
     public ResponseEntity<ResponseData> createUserPayment(UserPayment userPayment) {
         try{
             if(userPaymentRepository.existsByUserId(userPayment.getUserId())){
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "User payment is already exist", null));
             }
             userPayment.setCreatedDate(new Date());
             userPayment.setUpdatedDate(new Date());
@@ -43,6 +43,32 @@ public class UserPaymentService {
             u.setProvider(userPayment.getProvider());
             u.setUpdatedDate(new Date());
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Updated user payment", userPaymentRepository.save(u)));
+        }catch (Exception e){
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        }
+    }
+
+    public ResponseEntity<ResponseData> deleteUserPayment(Long userPaymentId) {
+        try{
+            userPaymentRepository.deleteById(userPaymentId);
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", null));
+        }catch (Exception e){
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        }
+    }
+
+    public ResponseEntity<ResponseData> getUserPaymentDetail(Long userPaymentId) {
+        try{
+            Optional<UserPayment> userPaymentOptional = userPaymentRepository.findById(userPaymentId);
+            if(userPaymentOptional.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User payment not found", null));
+            }
+            UserPayment userPayment = userPaymentOptional.get();
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", userPayment));
         }catch (Exception e){
             return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

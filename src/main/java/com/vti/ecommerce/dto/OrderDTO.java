@@ -21,11 +21,11 @@ public class OrderDTO {
 
     private UserPayment userPayment;
 
-    private boolean status;
+    private boolean statusShipping;
 
     private Double totalPrice;
 
-    private List<OrderItem> items;
+    private List<OrderItem> orderItemList;
 
     private Date createdDate;
 

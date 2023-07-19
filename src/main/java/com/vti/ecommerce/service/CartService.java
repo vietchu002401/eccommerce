@@ -53,16 +53,27 @@ public class CartService {
         return cartItemDTOS;
     }
 
-    public ResponseEntity<ResponseData> createCart(Cart cart) {
+    public ResponseEntity<ResponseData> createCart(HttpServletRequest httpServletRequest) {
         try {
-            if (cartRepository.existsByUserId(cart.getUserId())) {
+            String token = httpServletRequest.getHeader("Authorization").substring(7);
+            String username = jwtService.extractUsername(token);
+            Optional<User> userOptional = userRepository.findByUsername(username);
+            if(userOptional.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User not found", null));
+            }
+            User user = userOptional.get();
+            if (cartRepository.existsByUserId(user.getId())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "This user is already have a cart", null));
             }
-            if (!userRepository.existsById(cart.getUserId())) {
+            if (!userRepository.existsById(user.getId())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, "This user not found", null));
             }
-            cart.setCreatedDate(new Date());
-            cart.setUpdatedDate(new Date());
+            Cart cart = Cart.builder()
+                .userId(user.getId())
+                .status(true)
+                .createdDate(new Date())
+                .updatedDate(new Date())
+                .build();
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created cart", cartRepository.save(cart)));
         } catch (Exception e) {
             return ResponseEntity
@@ -78,6 +89,15 @@ public class CartService {
             Optional<User> userOptional = userRepository.findByUsername(username);
             if(userOptional.isEmpty()){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User not found", null));
+            }
+            if(!cartRepository.existsByUserId(userOptional.get().getId())){
+                Cart cart = Cart.builder()
+                    .userId(userOptional.get().getId())
+                    .status(true)
+                    .createdDate(new Date())
+                    .updatedDate(new Date())
+                    .build();
+                cartRepository.save(cart);
             }
             Optional<Cart> cartOptional = cartRepository.findByUserId(userOptional.get().getId());
             if(cartOptional.isEmpty()){
@@ -119,14 +139,27 @@ public class CartService {
         }
     }
 
-    public ResponseEntity<ResponseData> deleteCartItem(Long cartItemId) {
+    public ResponseEntity<ResponseData> deleteCartItem(Long cartItemId, HttpServletRequest httpServletRequest) {
         try {
             Optional<CartItem> cartItemOptional = cartItemRepository.findById(cartItemId);
             if (cartItemOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Item not found", null));
             }
             cartItemRepository.deleteById(cartItemOptional.get().getId());
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", null));
+            String token = httpServletRequest.getHeader("Authorization").substring(7);
+            String username = jwtService.extractUsername(token);
+            Optional<User> userOptional = userRepository.findByUsername(username);
+            if(userOptional.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User not found", null));
+            }
+            User user = userOptional.get();
+            Optional<Cart> cartOptional = cartRepository.findByUserId(user.getId());
+            if(cartOptional.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart not found", null));
+            }
+            Cart cart = cartOptional.get();
+            List<CartItem> cartItemList = cartItemRepository.findALlByCartId(cart.getId());
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Delete successfully", cartItemList));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -149,11 +182,22 @@ public class CartService {
         }
     }
 
-    public ResponseEntity<ResponseData> getCartItem(Long cartId) {
+    public ResponseEntity<ResponseData> getCartItem(HttpServletRequest httpServletRequest) {
         try {
-            List<CartItem> cartItemList = cartItemRepository.findALlByCartId(cartId);
-            List<CartItemDTO> cartItemDTOS = convertToCartItemDTO(cartItemList);
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", cartItemDTOS));
+            String token = httpServletRequest.getHeader("Authorization").substring(7);
+            String username = jwtService.extractUsername(token);
+            Optional<User> userOptional = userRepository.findByUsername(username);
+            if(userOptional.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User not found", null));
+            }
+            User user = userOptional.get();
+            Optional<Cart> cartOptional = cartRepository.findByUserId(user.getId());
+            if(cartOptional.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart not found", null));
+            }
+            Cart cart = cartOptional.get();
+            List<CartItem> cartItemList = cartItemRepository.findALlByCartId(cart.getId());
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", cartItemList));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -161,19 +205,10 @@ public class CartService {
         }
     }
 
-    public ResponseEntity<ResponseData> updateQuantity(String cartItemId, String quantity) {
+    public ResponseEntity<ResponseData> updateQuantity(CartItem cartItem) {
         try {
-//           Optional<CartItem> cartItemOptional = cartItemRepository.findById(Long.valueOf(cartItemId));
-//           if(cartItemOptional.isEmpty()){
-//               return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart item not found", null));
-//           }
-//           CartItem cartItem = cartItemOptional.get();
-//           Optional<Product> productOptional = productRepository.findById(cartItem.getProductId());
-//           Product product = productOptional.get();
-//           cartItem.setQuantity(cartItem.getQuantity() + Integer.valueOf(quantity));
-//           cartItem.setSubTotal(cartItem.getSubTotal() + product.getPrice()*Double.valueOf(quantity));
-//           cartItem.setUpdatedDate(new Date());
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Added quantity", cartItemRepository.updateQuantity(Integer.valueOf(quantity), Long.valueOf(cartItemId))));
+            cartItemRepository.updateQuantity(cartItem.getQuantity(), cartItem.getId());
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "updated quantity", cartItemRepository.findById(cartItem.getId())));
         } catch (Exception e) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)

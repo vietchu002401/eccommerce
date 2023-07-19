@@ -1,5 +1,6 @@
 package com.vti.ecommerce.customerController;
 
+import com.vti.ecommerce.dto.CartDTO;
 import com.vti.ecommerce.model.CartItem;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.service.CartService;
@@ -8,16 +9,12 @@ import com.vti.ecommerce.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/user")
@@ -45,24 +42,24 @@ public class CustomerController {
         return orderService.getOrderDetail(orderId);
     }
 
-    @DeleteMapping("/cart/remove-product/{cartItemId}")
-    public ResponseEntity<ResponseData> deleteCartItem(@PathVariable Long cartItemId){
-        return cartService.deleteCartItem(cartItemId);
+    @PostMapping("/cart/remove-product/{cartItemId}")
+    public ResponseEntity<ResponseData> deleteCartItem(@PathVariable Long cartItemId, HttpServletRequest httpServletRequest){
+        return cartService.deleteCartItem(cartItemId, httpServletRequest);
     }
 
-    @GetMapping("/cart/product-list/{cartId}")
-    public ResponseEntity<ResponseData> getCartItem(@PathVariable Long cartId){
-        return cartService.getCartItem(cartId);
+    @GetMapping("/cart/product-list")
+    public ResponseEntity<ResponseData> getCartItem(HttpServletRequest httpServletRequest){
+        return cartService.getCartItem(httpServletRequest);
     }
 
-    @PostMapping("/add-quantity")
-    public ResponseEntity<ResponseData> addQuantityToCart(@RequestParam String cartItemId, String quantity){
-        return cartService.updateQuantity(cartItemId, quantity);
+    @PostMapping("/cart/update-quantity")
+    public ResponseEntity<ResponseData> addQuantityToCart(@RequestBody CartItem cartItem){
+        return cartService.updateQuantity(cartItem);
     }
 
-    @PostMapping("/order")
-    public ResponseEntity<ResponseData> createOrder(@RequestBody List<Long> cartItemId, HttpServletRequest request){
+    @PostMapping("/cart/order")
+    public ResponseEntity<ResponseData> createOrder(@RequestBody CartDTO cartDTO, HttpServletRequest request){
         String token = request.getHeader("Authorization").substring(7);
-        return orderService.createOrder(cartItemId, token);
+        return orderService.createOrder(cartDTO, token);
     }
 }

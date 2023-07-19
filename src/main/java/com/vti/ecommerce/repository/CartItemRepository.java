@@ -20,11 +20,11 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
     List<CartItem> findCartItemByIdIn(List<Long> cartItemId);
 
     @Query(value = "UPDATE cart_item\n" +
-        "SET quantity = quantity + :quantity, sub_total = (SELECT price FROM product WHERE id = product_id) * quantity, updated_date = NOW()\n" +
+        "SET quantity = :quantity, sub_total = (SELECT price FROM product WHERE id = product_id) * :quantity, updated_date = NOW()\n" +
         "WHERE id = :cartItemId", nativeQuery = true)
     @Modifying
     @Transactional
-    Integer updateQuantity(@Param("quantity") Integer quantity,
+    Integer updateQuantity(@Param("quantity") int quantity,
                         @Param("cartItemId") Long cartItemId);
 
     Optional<CartItem> findByProductId(Long productId);
