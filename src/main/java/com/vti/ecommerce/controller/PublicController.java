@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/")
+@CrossOrigin("*")
 public class PublicController {
     @Autowired
     private CategoryService categoryService;
@@ -42,6 +43,11 @@ public class PublicController {
     @GetMapping("/home/best-sales")
     public ResponseEntity<ResponseData> getBestSeller(){
         return productService.getBestSeller();
+    }
+
+    @GetMapping("/product/detail/{productId}")
+    public ResponseEntity<ResponseData> getProductDetail(@PathVariable Long productId){
+        return productService.getProductDetail(productId);
     }
 
 }
