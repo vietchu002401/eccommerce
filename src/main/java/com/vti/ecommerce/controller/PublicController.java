@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/")
-@CrossOrigin("*")
 public class PublicController {
     @Autowired
     private CategoryService categoryService;

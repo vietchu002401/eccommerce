@@ -26,7 +26,6 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-
     @GetMapping("/info")
     public ResponseEntity<ResponseData> getUserInfo(HttpServletRequest request){
         return customerService.getUserInfo(request);
