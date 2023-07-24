@@ -17,7 +17,13 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<ErrorResponse> handleConflictException(NotFoundException exception, WebRequest request){
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException exception, WebRequest request){
         return ResponseEntity.status(409).body(new ErrorResponse(409, exception.getMessage()));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ErrorResponse> handlerBadRequestException(BadRequestException exception, WebRequest request){
+        return ResponseEntity.status(400).body(new ErrorResponse(400, exception.getMessage()));
     }
 }
