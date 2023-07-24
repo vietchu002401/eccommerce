@@ -1,6 +1,7 @@
 package com.vti.ecommerce.service;
 
 import com.vti.ecommerce.dto.CategoryDTO;
+import com.vti.ecommerce.exception.NotFoundException;
 import com.vti.ecommerce.model.Category;
 import com.vti.ecommerce.repository.CategoryRepository;
 import com.vti.ecommerce.response.ResponseData;
@@ -103,13 +104,18 @@ public class CategoryService {
     }
 
     public ResponseEntity<ResponseData> getAllCategory(){
-        try {
-            List<Category> categories = categoryRepository.findAll();
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categories));
-        } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+//        try {
+//            List<Category> categories = categoryRepository.findAll();
+//            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categories));
+//        } catch (Exception e) {
+//            return ResponseEntity
+//                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+//        }
+        List<Category> categories = categoryRepository.findAll();
+        if(categories.size() == 0){
+            throw new NotFoundException("Category not found");
         }
+        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categories));
     }
 }
