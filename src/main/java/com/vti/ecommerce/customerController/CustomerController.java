@@ -1,6 +1,7 @@
 package com.vti.ecommerce.customerController;
 
 import com.vti.ecommerce.dto.CartDTO;
+import com.vti.ecommerce.dto.UserDTO;
 import com.vti.ecommerce.model.CartItem;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.service.CartService;
@@ -29,6 +30,11 @@ public class CustomerController {
     @GetMapping("/info")
     public ResponseEntity<ResponseData> getUserInfo(HttpServletRequest request){
         return customerService.getUserInfo(request);
+    }
+
+    @PostMapping("/info/edit")
+    public ResponseEntity<ResponseData> editProfile(UserDTO userDTO){
+        return customerService.editProfile(userDTO);
     }
 
     @GetMapping("/order/all")

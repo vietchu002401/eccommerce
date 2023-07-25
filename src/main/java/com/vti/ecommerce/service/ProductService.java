@@ -2,6 +2,7 @@ package com.vti.ecommerce.service;
 
 import com.vti.ecommerce.dto.ProductDTO;
 import com.vti.ecommerce.dto.ProductRequestDTO;
+import com.vti.ecommerce.exception.ConflictException;
 import com.vti.ecommerce.exception.NotFoundException;
 import com.vti.ecommerce.model.Category;
 import com.vti.ecommerce.model.Product;
@@ -69,40 +70,37 @@ public class ProductService {
         }
     }
 
-    public ResponseEntity<ResponseData> createProduct(ProductRequestDTO productRequestDTO) {
-        try {
-            if (productRepository.existsByName(productRequestDTO.getName())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "Product is already exist", null));
-            }
-            Product product = Product.builder()
-                .name(productRequestDTO.getName())
-                .price(productRequestDTO.getPrice())
-                .description(productRequestDTO.getDescription())
-                .amount(productRequestDTO.getAmount())
-                .categoryId(productRequestDTO.getCategoryId())
-                .status(productRequestDTO.isStatus())
-                .createdDate(new Date())
-                .updatedDate(new Date())
-                .build();
-            Product productSaved = productRepository.save(product);
-            if (productRequestDTO.getProductImages() != null) {
-                for (ProductImage productImage : productRequestDTO.getProductImages()) {
-                    productImage.setProductId(productSaved.getId());
-                    productImage.setCreatedDate(new Date());
-                    productImage.setUpdatedDate(new Date());
-                    productImageRepository.save(productImage);
-                }
-            }
-            List<Product> products = new ArrayList<>();
-            List<Category> categories = categoryRepository.findAll();
-            products.add(productSaved);
-            List<ProductDTO> productDTOS = convertToProductDTO(products, categories);
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created new product", productDTOS));
-        } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+    public ResponseEntity<ResponseData> createProduct(ProductRequestDTO productRequestDTO) throws ServerErrorException {
+        if (productRepository.existsByName(productRequestDTO.getName())) {
+            throw new ConflictException("Product name is already exist");
         }
+        if (!categoryRepository.existsById(productRequestDTO.getCategoryId())) {
+            throw new NotFoundException("Category not found");
+        }
+        Product product = Product.builder()
+            .name(productRequestDTO.getName())
+            .price(productRequestDTO.getPrice())
+            .description(productRequestDTO.getDescription())
+            .amount(productRequestDTO.getAmount())
+            .categoryId(productRequestDTO.getCategoryId())
+            .status(productRequestDTO.isStatus())
+            .createdDate(new Date())
+            .updatedDate(new Date())
+            .build();
+        Product productSaved = productRepository.save(product);
+        if (productRequestDTO.getProductImages() != null) {
+            for (ProductImage productImage : productRequestDTO.getProductImages()) {
+                productImage.setProductId(productSaved.getId());
+                productImage.setCreatedDate(new Date());
+                productImage.setUpdatedDate(new Date());
+                productImageRepository.save(productImage);
+            }
+        }
+        List<Product> products = new ArrayList<>();
+        List<Category> categories = categoryRepository.findAll();
+        products.add(productSaved);
+        List<ProductDTO> productDTOS = convertToProductDTO(products, categories);
+        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created new product", productDTOS));
     }
 
     public ResponseEntity<ResponseData> updateProduct(Long productId, ProductRequestDTO productRequestDTO) {
@@ -204,19 +202,9 @@ public class ProductService {
         }
     }
 
-    public ResponseEntity<ResponseData> searchProduct(String q) throws ServerErrorException{
-//        try {
-//            List<Product> products = productRepository.searchProductByKeyword(q);
-//            List<Category> categories = categoryRepository.findAll();
-//            List<ProductDTO> productDTOS = convertToProductDTO(products, categories);
-//            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productDTOS));
-//        } catch (Exception e) {
-//            return ResponseEntity
-//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
-//        }
+    public ResponseEntity<ResponseData> searchProduct(String q) throws ServerErrorException {
         List<Product> products = productRepository.searchProductByKeyword(q);
-        if (products.size() == 0) {
+        if (products.isEmpty()) {
             throw new NotFoundException("Product not found");
         }
         List<Category> categories = categoryRepository.findAll();
@@ -238,8 +226,8 @@ public class ProductService {
     }
 
     public ResponseEntity<ResponseData> getBestSeller() throws ServerErrorException {
-            List<Product> products = productRepository.findBestSeller();
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", products));
+        List<Product> products = productRepository.findBestSeller();
+        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", products));
     }
 
     public ResponseEntity<ResponseData> activeProduct(Long productId) {
