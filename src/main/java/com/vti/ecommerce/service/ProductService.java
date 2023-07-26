@@ -12,6 +12,8 @@ import com.vti.ecommerce.repository.ProductImageRepository;
 import com.vti.ecommerce.repository.ProductRepository;
 import com.vti.ecommerce.response.ResponseData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -202,19 +204,21 @@ public class ProductService {
         }
     }
 
-    public ResponseEntity<ResponseData> searchProduct(String q) throws ServerErrorException {
-        List<Product> products = productRepository.searchProductByKeyword(q);
+    public ResponseEntity<ResponseData> searchProduct(String q, int page, int size) throws ServerErrorException {
+        PageRequest pageRequest =  PageRequest.of(page, size);
+        List<Product> products = productRepository.searchProductByKeyword(q, pageRequest);
         if (products.isEmpty()) {
             throw new NotFoundException("Product not found");
         }
         List<Category> categories = categoryRepository.findAll();
         List<ProductDTO> productDTOS = convertToProductDTO(products, categories);
-        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productDTOS));
+        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully " + productDTOS.size() + " items", productDTOS));
     }
 
-    public ResponseEntity<ResponseData> getProductByCategory(Long categoryId) {
+    public ResponseEntity<ResponseData> getProductByCategory(Long categoryId, int page, int size) {
         try {
-            List<Product> products = productRepository.findAllByCategoryId(categoryId);
+            Pageable pageable = PageRequest.of(page, size);
+            List<Product> products = productRepository.findAllByCategoryId(categoryId, pageable);
             List<Category> categories = categoryRepository.findAll();
             List<ProductDTO> productDTOS = convertToProductDTO(products, categories);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productDTOS));

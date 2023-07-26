@@ -207,6 +207,10 @@ public class CartService {
 
     public ResponseEntity<ResponseData> updateQuantity(CartItem cartItem) {
         try {
+            Optional<Product> productOptional = productRepository.findWhereAmountNotEnough(cartItem.getProductId(), cartItem.getQuantity());
+            if(productOptional.isPresent()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, productOptional.get().getName() + " has only " + productOptional.get().getAmount() + " items left!", null));
+            }
             cartItemRepository.updateQuantity(cartItem.getQuantity(), cartItem.getId());
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "updated quantity", cartItemRepository.findById(cartItem.getId())));
         } catch (Exception e) {

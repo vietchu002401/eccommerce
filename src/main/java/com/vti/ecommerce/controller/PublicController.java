@@ -7,7 +7,12 @@ import com.vti.ecommerce.service.ProductService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/")
@@ -25,8 +30,8 @@ public class PublicController {
     }
 
     @GetMapping("/product-list/{categoryId}")
-    public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId){
-        return productService.getProductByCategory(categoryId);
+    public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId, @RequestParam int page, int size){
+        return productService.getProductByCategory(categoryId, page, size);
     }
 
     @PostMapping("/add-to-cart/{productId}")
@@ -35,8 +40,8 @@ public class PublicController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ResponseData> searchByKeyword(@RequestParam String q){
-        return productService.searchProduct(q);
+    public ResponseEntity<ResponseData> searchByKeyword(@RequestParam String q, int page, int size){
+        return productService.searchProduct(q, page, size);
     }
 
     @GetMapping("/home/best-sales")
@@ -48,5 +53,4 @@ public class PublicController {
     public ResponseEntity<ResponseData> getProductDetail(@PathVariable Long productId){
         return productService.getProductDetail(productId);
     }
-
 }

@@ -54,12 +54,12 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ResponseData> searchProduct(@RequestParam String q){
-        return productService.searchProduct(q);
+    public ResponseEntity<ResponseData> searchProduct(@RequestParam String q, int page, int size){
+        return productService.searchProduct(q, page, size);
     }
 
     @GetMapping("/find-by-category/{categoryId}")
-    public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId){
-        return productService.getProductByCategory(categoryId);
+    public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId, @RequestParam int page, int size){
+        return productService.getProductByCategory(categoryId, page, size);
     }
 }

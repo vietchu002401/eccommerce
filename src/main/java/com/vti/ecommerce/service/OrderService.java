@@ -18,6 +18,7 @@ import com.vti.ecommerce.repository.UserPaymentRepository;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.user.User;
 import com.vti.ecommerce.user.UserRepository;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerErrorException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -46,6 +48,8 @@ public class OrderService {
     private OrderItemRepository orderItemRepository;
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private MailService mailService;
 
     private List<OrderDTO> convertToOrderDTO(List<Order> orders, List<UserPayment> userPayments) {
         List<OrderDTO> orderDTOS = new ArrayList<>();
@@ -71,7 +75,7 @@ public class OrderService {
         return orderDTOS;
     }
 
-    public ResponseEntity<ResponseData> createOrder(CartDTO cartDTO, String token) throws ServerErrorException {
+    public ResponseEntity<ResponseData> createOrder(CartDTO cartDTO, String token) throws ServerErrorException, MessagingException, IOException {
         String username = jwtService.extractUsername(token);
         User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
         UserPayment userPayment = userPaymentRepository.findByUserId(user.getId()).orElseThrow(() -> new NotFoundException("User payment not found"));
@@ -105,7 +109,7 @@ public class OrderService {
                 .build();
             orderItemRepository.save(orderItem);
             cartItemRepository.deleteById(cartItem.getId());
-            //Chưa làm trừ amount ở trong product sau khi order
+            int updated = productRepository.updateAmount(-orderItem.getQuantity(), orderItem.getProductId());
             totalPrice += orderItem.getSubTotal();
         }
         newOrder.setTotalPrice(totalPrice);
@@ -116,10 +120,12 @@ public class OrderService {
             .userId(newOrder.getUserId())
             .userPayment(userPayment)
             .orderItemList(orderItems)
+            .totalPrice(newOrder.getTotalPrice())
             .statusShipping(newOrder.isStatusShipping())
             .createdDate(newOrder.getCreatedDate())
             .updatedDate(newOrder.getUpdatedDate())
             .build();
+        mailService.sendmail(user.getEmail(), orderDTO);
         return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Order successfully", orderDTO));
     }
 

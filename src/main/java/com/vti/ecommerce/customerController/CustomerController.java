@@ -7,6 +7,7 @@ import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.service.CartService;
 import com.vti.ecommerce.service.CustomerService;
 import com.vti.ecommerce.service.OrderService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/user")
@@ -63,7 +66,7 @@ public class CustomerController {
     }
 
     @PostMapping("/cart/order")
-    public ResponseEntity<ResponseData> createOrder(@RequestBody CartDTO cartDTO, HttpServletRequest request){
+    public ResponseEntity<ResponseData> createOrder(@RequestBody CartDTO cartDTO, HttpServletRequest request) throws MessagingException, IOException {
         String token = request.getHeader("Authorization").substring(7);
         return orderService.createOrder(cartDTO, token);
     }
