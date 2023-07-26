@@ -4,6 +4,8 @@ import com.vti.ecommerce.model.ProductImage;
 import com.vti.ecommerce.repository.ProductImageRepository;
 import com.vti.ecommerce.response.ResponseData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -33,9 +35,10 @@ public class ProductImageService {
         }
     }
 
-    public ResponseEntity<ResponseData> getProductImage(Long productId) {
+    public ResponseEntity<ResponseData> getProductImage(Long productId, int page) {
         try{
-            List<ProductImage> productImages = productImageRepository.findAllByProductId(productId);
+            Pageable pageable = PageRequest.of(page, 8);
+            List<ProductImage> productImages = productImageRepository.findByProductIdPage(productId, pageable);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productImages));
         }catch (Exception e){
             return ResponseEntity

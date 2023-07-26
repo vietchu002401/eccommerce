@@ -39,4 +39,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Transactional
     int updateAmount(@Param("quantity") int quantity,
                      @Param("productId") Long productId);
+
+    @Query(value = "SELECT * FROM product", nativeQuery = true)
+    List<Product> findAllWithPage(Pageable pageable);
 }

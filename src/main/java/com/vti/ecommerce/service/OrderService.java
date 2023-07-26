@@ -21,6 +21,8 @@ import com.vti.ecommerce.user.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -129,9 +131,10 @@ public class OrderService {
         return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Order successfully", orderDTO));
     }
 
-    public ResponseEntity<ResponseData> getAllOrder() {
+    public ResponseEntity<ResponseData> getAllOrder(int page) {
         try {
-            List<Order> orders = orderRepository.findAll();
+            Pageable pageable = PageRequest.of(page, 4);
+            List<Order> orders = orderRepository.findAllWithPage(pageable);
             List<UserPayment> userPayments = userPaymentRepository.findAll();
             List<OrderDTO> orderDTOS = convertToOrderDTO(orders, userPayments);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orderDTOS));
@@ -169,7 +172,7 @@ public class OrderService {
         }
     }
 
-    public ResponseEntity<ResponseData> getUserOrder(HttpServletRequest request) {
+    public ResponseEntity<ResponseData> getUserOrder(HttpServletRequest request, int page) {
         try {
             String token = request.getHeader("Authorization").substring(7);
             String username = jwtService.extractUsername(token);
@@ -178,7 +181,8 @@ public class OrderService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "user not found", null));
             }
             User user = userOptional.get();
-            List<Order> orders = orderRepository.findByUserId(user.getId());
+            Pageable pageable = PageRequest.of(page, 8);
+            List<Order> orders = orderRepository.findByUserId(user.getId(), pageable);
 //            List<UserPayment> userPayments = userPaymentRepository.findAll();
 //            List<OrderDTO> orderDTOS = convertToOrderDTO(orders, userPayments);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orders));

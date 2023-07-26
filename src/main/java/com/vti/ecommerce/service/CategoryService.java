@@ -7,6 +7,8 @@ import com.vti.ecommerce.model.Category;
 import com.vti.ecommerce.repository.CategoryRepository;
 import com.vti.ecommerce.response.ResponseData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -93,9 +95,10 @@ public class CategoryService {
         }
     }
 
-    public ResponseEntity<ResponseData> searchCategory(String q) {
+    public ResponseEntity<ResponseData> searchCategory(String q, int page) {
         try {
-            List<Category> categories = categoryRepository.searchCategoriesByKeyword(q);
+            Pageable pageable = PageRequest.of(page, 8);
+            List<Category> categories = categoryRepository.searchCategoriesByKeyword(q, pageable);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categories));
         } catch (Exception e) {
             return ResponseEntity
@@ -104,8 +107,9 @@ public class CategoryService {
         }
     }
 
-    public ResponseEntity<ResponseData> getAllCategory() throws ServerErrorException {
-        List<Category> categories = categoryRepository.findAll();
+    public ResponseEntity<ResponseData> getAllCategory(int page) throws ServerErrorException {
+        Pageable pageable = PageRequest.of(page, 8);
+        List<Category> categories = categoryRepository.findAllWithPage(pageable);
         if(categories.size() == 0){
             throw new NotFoundException("Category not found");
         }

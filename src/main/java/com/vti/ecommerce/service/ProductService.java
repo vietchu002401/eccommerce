@@ -59,9 +59,10 @@ public class ProductService {
         return productDTOS;
     }
 
-    public ResponseEntity<ResponseData> getAllProduct() {
+    public ResponseEntity<ResponseData> getAllProduct(int page) {
         try {
-            List<Product> products = productRepository.findAll();
+            Pageable pageable = PageRequest.of(page, 8);
+            List<Product> products = productRepository.findAllWithPage(pageable);
             List<Category> categories = categoryRepository.findAll();
             List<ProductDTO> productDTOS = convertToProductDTO(products, categories);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productDTOS));
@@ -204,8 +205,8 @@ public class ProductService {
         }
     }
 
-    public ResponseEntity<ResponseData> searchProduct(String q, int page, int size) throws ServerErrorException {
-        PageRequest pageRequest =  PageRequest.of(page, size);
+    public ResponseEntity<ResponseData> searchProduct(String q, int page) throws ServerErrorException {
+        PageRequest pageRequest =  PageRequest.of(page, 8);
         List<Product> products = productRepository.searchProductByKeyword(q, pageRequest);
         if (products.isEmpty()) {
             throw new NotFoundException("Product not found");
@@ -215,9 +216,9 @@ public class ProductService {
         return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully " + productDTOS.size() + " items", productDTOS));
     }
 
-    public ResponseEntity<ResponseData> getProductByCategory(Long categoryId, int page, int size) {
+    public ResponseEntity<ResponseData> getProductByCategory(Long categoryId, int page) {
         try {
-            Pageable pageable = PageRequest.of(page, size);
+            Pageable pageable = PageRequest.of(page, 8);
             List<Product> products = productRepository.findAllByCategoryId(categoryId, pageable);
             List<Category> categories = categoryRepository.findAll();
             List<ProductDTO> productDTOS = convertToProductDTO(products, categories);

@@ -42,8 +42,8 @@ public class CategoryController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ResponseData> searchCategory(@RequestParam String q){
-        return categoryService.searchCategory(q);
+    public ResponseEntity<ResponseData> searchCategory(@RequestParam String q, int page){
+        return categoryService.searchCategory(q, page);
     }
 
 }

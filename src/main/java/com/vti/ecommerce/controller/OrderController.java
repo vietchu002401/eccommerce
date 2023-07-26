@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -16,8 +17,8 @@ public class OrderController {
     private OrderService orderService;
 
     @GetMapping("/all")
-    public ResponseEntity<ResponseData> getAllOrder(){
-        return orderService.getAllOrder();
+    public ResponseEntity<ResponseData> getAllOrder(@RequestParam int page){
+        return orderService.getAllOrder(page);
     }
 
     @GetMapping("/detail/{orderId}")

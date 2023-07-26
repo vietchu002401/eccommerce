@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -41,8 +42,8 @@ public class CustomerController {
     }
 
     @GetMapping("/order/all")
-    public ResponseEntity<ResponseData> getUserOrder(HttpServletRequest request){
-        return orderService.getUserOrder(request);
+    public ResponseEntity<ResponseData> getUserOrder(HttpServletRequest request, @RequestParam int page){
+        return orderService.getUserOrder(request, page);
     }
 
     @GetMapping("/order/detail/{orderId}")
@@ -56,8 +57,8 @@ public class CustomerController {
     }
 
     @GetMapping("/cart/product-list")
-    public ResponseEntity<ResponseData> getCartItem(HttpServletRequest httpServletRequest){
-        return cartService.getCartItem(httpServletRequest);
+    public ResponseEntity<ResponseData> getCartItem(HttpServletRequest httpServletRequest, @RequestParam int page){
+        return cartService.getCartItem(httpServletRequest, page);
     }
 
     @PostMapping("/cart/update-quantity")

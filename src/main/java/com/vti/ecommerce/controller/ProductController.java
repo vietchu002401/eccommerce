@@ -24,8 +24,8 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping("/all")
-    public ResponseEntity<ResponseData> getALlProduct(){
-        return productService.getAllProduct();
+    public ResponseEntity<ResponseData> getALlProduct(@RequestParam int page){
+        return productService.getAllProduct(page);
     }
 
     @PostMapping("/add")
@@ -54,12 +54,12 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ResponseData> searchProduct(@RequestParam String q, int page, int size){
-        return productService.searchProduct(q, page, size);
+    public ResponseEntity<ResponseData> searchProduct(@RequestParam String q, int page){
+        return productService.searchProduct(q, page);
     }
 
     @GetMapping("/find-by-category/{categoryId}")
-    public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId, @RequestParam int page, int size){
-        return productService.getProductByCategory(categoryId, page, size);
+    public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId, @RequestParam int page){
+        return productService.getProductByCategory(categoryId, page);
     }
 }

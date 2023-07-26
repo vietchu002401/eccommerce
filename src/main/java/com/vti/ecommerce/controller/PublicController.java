@@ -25,13 +25,13 @@ public class PublicController {
     private CartService cartService;
 
     @GetMapping("/home/category-list")
-    public ResponseEntity<ResponseData> getAllCategory(){
-        return categoryService.getAllCategory();
+    public ResponseEntity<ResponseData> getAllCategory(@RequestParam int page){
+        return categoryService.getAllCategory(page);
     }
 
     @GetMapping("/product-list/{categoryId}")
-    public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId, @RequestParam int page, int size){
-        return productService.getProductByCategory(categoryId, page, size);
+    public ResponseEntity<ResponseData> getProductByCategory(@PathVariable Long categoryId, @RequestParam int page){
+        return productService.getProductByCategory(categoryId, page);
     }
 
     @PostMapping("/add-to-cart/{productId}")
@@ -40,8 +40,8 @@ public class PublicController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ResponseData> searchByKeyword(@RequestParam String q, int page, int size){
-        return productService.searchProduct(q, page, size);
+    public ResponseEntity<ResponseData> searchByKeyword(@RequestParam String q, int page){
+        return productService.searchProduct(q, page);
     }
 
     @GetMapping("/home/best-sales")

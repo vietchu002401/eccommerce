@@ -1,6 +1,7 @@
 package com.vti.ecommerce.repository;
 
 import com.vti.ecommerce.model.CartItem;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +16,7 @@ import java.util.Optional;
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
     Optional<CartItem> findByProductIdAndCartId(Long productId, Long cartId);
 
-    List<CartItem> findALlByCartId(Long cartId);
+    List<CartItem> findALlByCartId(Long cartId, Pageable pageable);
 
     List<CartItem> findCartItemByIdIn(List<Long> cartItemId);
 

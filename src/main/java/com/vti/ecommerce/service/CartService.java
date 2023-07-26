@@ -13,6 +13,8 @@ import com.vti.ecommerce.user.User;
 import com.vti.ecommerce.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -158,7 +160,8 @@ public class CartService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart not found", null));
             }
             Cart cart = cartOptional.get();
-            List<CartItem> cartItemList = cartItemRepository.findALlByCartId(cart.getId());
+            Pageable pageable = PageRequest.of(0, 10000);
+            List<CartItem> cartItemList = cartItemRepository.findALlByCartId(cart.getId(), pageable);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Delete successfully", cartItemList));
         } catch (Exception e) {
             return ResponseEntity
@@ -182,7 +185,7 @@ public class CartService {
         }
     }
 
-    public ResponseEntity<ResponseData> getCartItem(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ResponseData> getCartItem(HttpServletRequest httpServletRequest, int page) {
         try {
             String token = httpServletRequest.getHeader("Authorization").substring(7);
             String username = jwtService.extractUsername(token);
@@ -196,7 +199,8 @@ public class CartService {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart not found", null));
             }
             Cart cart = cartOptional.get();
-            List<CartItem> cartItemList = cartItemRepository.findALlByCartId(cart.getId());
+            Pageable pageable = PageRequest.of(page, 8);
+            List<CartItem> cartItemList = cartItemRepository.findALlByCartId(cart.getId(), pageable);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", cartItemList));
         } catch (Exception e) {
             return ResponseEntity
