@@ -166,7 +166,7 @@ public class ProductService {
             if (productOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Product not found", null));
             }
-            productRepository.deleteById(productId);
+            productRepository.inActiveById(productId);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", productOptional.get()));
         } catch (Exception e) {
             return ResponseEntity

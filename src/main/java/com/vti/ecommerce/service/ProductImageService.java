@@ -72,7 +72,7 @@ public class ProductImageService {
             if(!productImageRepository.existsById(productImageId)){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Image id not found", productImageId));
             }
-            productImageRepository.deleteById(productImageId);
+            productImageRepository.inActiveById(productImageId);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", productImageId));
         }catch (Exception e){
             return ResponseEntity

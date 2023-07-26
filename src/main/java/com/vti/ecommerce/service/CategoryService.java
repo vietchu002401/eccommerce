@@ -67,10 +67,10 @@ public class CategoryService {
 
     public ResponseEntity<ResponseData> deleteCategory(Long categoryId) {
         try {
-            if(categoryRepository.existsById(categoryId)){
+            if(!categoryRepository.existsById(categoryId)){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Category not found", null));
             }
-            categoryRepository.deleteById(categoryId);
+            categoryRepository.inActiveById(categoryId);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", categoryId));
         } catch (Exception e) {
             return ResponseEntity

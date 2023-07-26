@@ -39,4 +39,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Transactional
     int updateAmount(@Param("quantity") int quantity,
                      @Param("productId") Long productId);
+
+    @Query(value = "UPDATE product SET status = false, updated_date = NOW() WHERE id = :productId", nativeQuery = true)
+    @Modifying
+    @Transactional
+    void inActiveById(@Param("productId") Long productId);
 }

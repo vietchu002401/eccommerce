@@ -52,7 +52,7 @@ public class UserPaymentService {
 
     public ResponseEntity<ResponseData> deleteUserPayment(Long userPaymentId) {
         try{
-            userPaymentRepository.deleteById(userPaymentId);
+            userPaymentRepository.inActiveById(userPaymentId);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", null));
         }catch (Exception e){
             return ResponseEntity
