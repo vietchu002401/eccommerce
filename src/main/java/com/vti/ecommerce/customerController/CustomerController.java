@@ -5,6 +5,7 @@ import com.vti.ecommerce.dto.UserDTO;
 import com.vti.ecommerce.model.CartItem;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.service.CartService;
+import com.vti.ecommerce.service.CouponService;
 import com.vti.ecommerce.service.CustomerService;
 import com.vti.ecommerce.service.OrderService;
 import jakarta.mail.MessagingException;
@@ -30,6 +31,8 @@ public class CustomerController {
     private CartService cartService;
     @Autowired
     private CustomerService customerService;
+    @Autowired
+    private CouponService couponService;
 
     @GetMapping("/info")
     public ResponseEntity<ResponseData> getUserInfo(HttpServletRequest request){
@@ -70,5 +73,10 @@ public class CustomerController {
     public ResponseEntity<ResponseData> createOrder(@RequestBody CartDTO cartDTO, HttpServletRequest request) throws MessagingException, IOException {
         String token = request.getHeader("Authorization").substring(7);
         return orderService.createOrder(cartDTO, token);
+    }
+
+    @PostMapping("/coupon/check/{couponCode}")
+    public ResponseEntity<ResponseData> checkCoupon(@PathVariable String couponCode){
+        return couponService.checkCoupon(couponCode);
     }
 }

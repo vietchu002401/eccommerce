@@ -1,8 +1,6 @@
 package com.vti.ecommerce.controller;
 
-import com.vti.ecommerce.dto.ProductDTO;
 import com.vti.ecommerce.dto.ProductRequestDTO;
-import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.response.ResponseData;
 import com.vti.ecommerce.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
