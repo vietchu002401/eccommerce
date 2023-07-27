@@ -26,16 +26,19 @@ public class CsvService {
     @Autowired
     private ProductRepository productRepository;
 
-    private void createCell(Row row, int columnCount, Object valueOfCell, CellStyle style) {
+    private void createCell(Row row, int columnCount, Object value, CellStyle style, XSSFSheet sheet) {
         Cell cell = row.createCell(columnCount);
-        if (valueOfCell instanceof Integer) {
-            cell.setCellValue((Integer) valueOfCell);
-        } else if (valueOfCell instanceof Long) {
-            cell.setCellValue((Long) valueOfCell);
-        } else if (valueOfCell instanceof String) {
-            cell.setCellValue((String) valueOfCell);
-        } else {
-            cell.setCellValue((Boolean) valueOfCell);
+        sheet.autoSizeColumn(columnCount);
+        if (value instanceof Integer) {
+            cell.setCellValue((Integer) value);
+        } else if (value instanceof Boolean) {
+            cell.setCellValue((Boolean) value);
+        }else if (value instanceof Long) {
+            cell.setCellValue((Long) value);
+        }else if (value instanceof Double) {
+            cell.setCellValue((Double) value);
+        }else{
+            cell.setCellValue(String.valueOf(value));
         }
         cell.setCellStyle(style);
     }
@@ -53,14 +56,16 @@ public class CsvService {
 
             XSSFWorkbook workbook = new XSSFWorkbook();
             XSSFSheet sheet = workbook.createSheet("Products");
+
+            //header
             Row rowHeader = sheet.createRow(0);
-            CellStyle style = workbook.createCellStyle();
-            XSSFFont font = workbook.createFont();
-            font.setBold(true);
-            font.setFontHeight(16);
-            style.setFont(font);
+            CellStyle styleHeader = workbook.createCellStyle();
+            XSSFFont fontHeader = workbook.createFont();
+            fontHeader.setBold(true);
+            fontHeader.setFontHeight(16);
+            styleHeader.setFont(fontHeader);
             for (int i = 0; i < titles.size(); i++) {
-                createCell(rowHeader, i, titles.get(i), style);
+                createCell(rowHeader, i, titles.get(i), styleHeader, sheet);
             }
 
             //write
@@ -68,19 +73,21 @@ public class CsvService {
             CellStyle styleBody = workbook.createCellStyle();
             XSSFFont fontBody = workbook.createFont();
             fontBody.setFontHeight(14);
-            styleBody.setFont(font);
+            styleBody.setFont(fontBody);
+            int stt = 1;
             for (Product product: productList) {
                 Row rowBody = sheet.createRow(rowCount++);
                 int columnCount = 0;
-                createCell(rowBody, columnCount++, product.getId(), style);
-                createCell(rowBody, columnCount++, product.getName(), style);
-//                createCell(rowBody, columnCount++, product.getPrice(), style);
-                createCell(rowBody, columnCount++, product.getDescription(), style);
-                createCell(rowBody, columnCount++, product.getAmount(), style);
-                createCell(rowBody, columnCount++, product.getCategoryId(), style);
-                createCell(rowBody, columnCount++, product.isStatus(), style);
-                createCell(rowBody, columnCount++, product.getCreatedDate(), style);
-                createCell(rowBody, columnCount, product.getUpdatedDate(), style);
+                createCell(rowBody, columnCount++, stt++, styleBody, sheet);
+                createCell(rowBody, columnCount++, product.getId(), styleBody, sheet);
+                createCell(rowBody, columnCount++, product.getName(), styleBody, sheet);
+                createCell(rowBody, columnCount++, product.getPrice(), styleBody, sheet);
+                createCell(rowBody, columnCount++, product.getDescription(), styleBody, sheet);
+                createCell(rowBody, columnCount++, product.getAmount(), styleBody, sheet);
+                createCell(rowBody, columnCount++, product.getCategoryId(), styleBody, sheet);
+                createCell(rowBody, columnCount++, product.isStatus(), styleBody, sheet);
+                createCell(rowBody, columnCount++, product.getCreatedDate(), styleBody, sheet);
+                createCell(rowBody, columnCount, product.getUpdatedDate(), styleBody, sheet);
             }
             ServletOutputStream outputStream = response.getOutputStream();
             workbook.write(outputStream);

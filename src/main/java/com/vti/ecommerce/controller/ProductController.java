@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -72,6 +75,10 @@ public class ProductController {
 
     @GetMapping("/download-csv")
     public ResponseEntity<ResponseData> downloadProduct(HttpServletResponse response) {
+        response.setContentType("application/octet-stream");
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=users.xlsx";
+        response.setHeader(headerKey, headerValue);
         return csvService.downloadProduct(response);
     }
 }
