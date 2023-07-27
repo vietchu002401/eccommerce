@@ -14,4 +14,5 @@ import java.util.List;
 public class CartDTO {
     private Long userPaymentId;
     private List<Long> cartItemList;
+    private Long couponId;
 }

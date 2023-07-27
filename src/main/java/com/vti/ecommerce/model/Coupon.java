@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,22 +19,26 @@ import java.util.Date;
 @Data
 @Entity
 @Builder
+@Table(name = "coupon")
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "coupon")
 public class Coupon {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     private String code;
 
-    @Column(name = "discount_value")
-    private String discountValue;
+    @NotNull
+    @Column(name = "discount_percent")
+    private Integer discountPercent;
 
-    @Column(name = "usage_limit")
-    private int usageLimit;
+    @NotNull
+    @Column(name = "max_usage")
+    private Integer maxUsage;
 
+    @NotNull
     @Column(name = "expiration_date")
     private String expirationDate;
 

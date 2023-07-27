@@ -4,13 +4,16 @@ import com.vti.ecommerce.config.JwtService;
 import com.vti.ecommerce.dto.CartDTO;
 import com.vti.ecommerce.dto.OrderDTO;
 import com.vti.ecommerce.exception.BadRequestException;
+import com.vti.ecommerce.exception.ConflictException;
 import com.vti.ecommerce.exception.NotFoundException;
 import com.vti.ecommerce.model.CartItem;
+import com.vti.ecommerce.model.Coupon;
 import com.vti.ecommerce.model.Order;
 import com.vti.ecommerce.model.OrderItem;
 import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.model.UserPayment;
 import com.vti.ecommerce.repository.CartItemRepository;
+import com.vti.ecommerce.repository.CouponRepository;
 import com.vti.ecommerce.repository.OrderItemRepository;
 import com.vti.ecommerce.repository.OrderRepository;
 import com.vti.ecommerce.repository.ProductRepository;
@@ -29,10 +32,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerErrorException;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 
 @Service
 public class OrderService {
@@ -52,6 +58,8 @@ public class OrderService {
     private ProductRepository productRepository;
     @Autowired
     private MailService mailService;
+    @Autowired
+    private CouponRepository couponRepository;
 
     private List<OrderDTO> convertToOrderDTO(List<Order> orders, List<UserPayment> userPayments) {
         List<OrderDTO> orderDTOS = new ArrayList<>();
@@ -77,7 +85,7 @@ public class OrderService {
         return orderDTOS;
     }
 
-    public ResponseEntity<ResponseData> createOrder(CartDTO cartDTO, String token) throws ServerErrorException, MessagingException, IOException {
+    public ResponseEntity<ResponseData> createOrder(CartDTO cartDTO, String token) throws ServerErrorException, MessagingException, IOException, ParseException {
         String username = jwtService.extractUsername(token);
         User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
         UserPayment userPayment = userPaymentRepository.findByUserId(user.getId()).orElseThrow(() -> new NotFoundException("User payment not found"));
@@ -98,6 +106,18 @@ public class OrderService {
             .createdDate(new Date())
             .updatedDate(new Date())
             .build();
+        if(cartDTO.getCouponId() != null){
+            Coupon coupon = couponRepository.findById(cartDTO.getCouponId()).orElseThrow(()->new NotFoundException("Coupon not found"));
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+            Date expirationDate = sdf.parse(coupon.getExpirationDate());
+            if(expirationDate.before(new Date())){
+                throw new ConflictException("Coupon is expirated");
+            }
+            if(coupon.getMaxUsage() < 1){
+                throw new ConflictException("Coupon is out of limit");
+            }
+        }
         Order newOrder = orderRepository.save(order);
         Double totalPrice = 0.0;
         for (CartItem cartItem : cartItemList) {
@@ -113,6 +133,12 @@ public class OrderService {
             cartItemRepository.deleteById(cartItem.getId());
             int updated = productRepository.updateAmount(-orderItem.getQuantity(), orderItem.getProductId());
             totalPrice += orderItem.getSubTotal();
+        }
+        if(cartDTO.getCouponId() != null){
+            Coupon coupon = couponRepository.findById(cartDTO.getCouponId()).orElseThrow(()->new NotFoundException("Coupon not found"));
+            coupon.setMaxUsage(coupon.getMaxUsage()-1);
+            couponRepository.save(coupon);
+            totalPrice = totalPrice*(100-coupon.getDiscountPercent())/100;
         }
         newOrder.setTotalPrice(totalPrice);
         orderRepository.save(newOrder);

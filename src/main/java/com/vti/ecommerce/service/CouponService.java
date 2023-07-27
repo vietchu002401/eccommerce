@@ -71,7 +71,7 @@ public class CouponService {
             if(expirationDate.before(new Date())){
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "Coupon is expirated", couponCode));
             }
-            if(coupon.getUsageLimit() < 1){
+            if(coupon.getMaxUsage() < 1){
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "Coupon out of limit", couponCode));
             }
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Coupon valid", coupon));
@@ -79,6 +79,32 @@ public class CouponService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
         }catch (NotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, e.getMessage(), null));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        }
+    }
+
+    public ResponseEntity<ResponseData> updateCoupon(Long couponId, Coupon coupon) {
+        try{
+            Coupon c = couponRepository.findById(couponId).orElseThrow(()-> new NotFoundException("Coupon not found"));
+            if(!c.getCode().equals(coupon.getCode()) &&  couponRepository.existsByCode(coupon.getCode())){
+                throw new ConflictException("This code is already exist");
+            }
+            coupon.setId(c.getId());
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Updated", couponRepository.save(coupon)));
+        }catch (ConflictException e){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, e.getMessage(), null));
+        }catch (NotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, e.getMessage(), null));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        }
+    }
+
+    public ResponseEntity<ResponseData> deleteCoupon(Long couponId) {
+        try{
+          couponRepository.deleteById(couponId);
+          return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", null));
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
         }

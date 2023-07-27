@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 @RestController
 @RequestMapping("/user")
@@ -70,7 +71,7 @@ public class CustomerController {
     }
 
     @PostMapping("/cart/order")
-    public ResponseEntity<ResponseData> createOrder(@RequestBody CartDTO cartDTO, HttpServletRequest request) throws MessagingException, IOException {
+    public ResponseEntity<ResponseData> createOrder(@RequestBody CartDTO cartDTO, HttpServletRequest request) throws MessagingException, IOException, ParseException {
         String token = request.getHeader("Authorization").substring(7);
         return orderService.createOrder(cartDTO, token);
     }
