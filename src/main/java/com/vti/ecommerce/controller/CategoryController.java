@@ -13,7 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/category")
@@ -22,8 +26,8 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @PostMapping("/add")
-    public ResponseEntity<ResponseData> createCategory(@RequestBody CategoryDTO categoryDTO) {
-        return categoryService.createCategory(categoryDTO);
+    public ResponseEntity<ResponseData> createCategory(@RequestPart("categoryDTO") CategoryDTO categoryDTO, @RequestPart("files") MultipartFile file) {
+        return categoryService.createCategory(categoryDTO, file);
     }
 
     @PostMapping("/update/{categoryId}")
@@ -45,5 +49,10 @@ public class CategoryController {
     public ResponseEntity<ResponseData> searchCategory(@RequestParam String q, int page){
         return categoryService.searchCategory(q, page);
     }
+
+//    @PostMapping("/upload-image")
+//    public ResponseEntity<ResponseData> uploadImage(@RequestParam("files") List<MultipartFile> files){
+//        return categoryService.uploadImage(files);
+//    }
 
 }

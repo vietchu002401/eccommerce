@@ -32,7 +32,8 @@ public class SecurityConfiguration {
             .cors(cors -> cors.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/login", "/register", "/home/**", "/search/**", "/product-list/**", "/product/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/**").permitAll()
+                .requestMatchers("/login", "/register", "/home/**", "/search/**", "/product-list/**", "/product/**", "/uploads/**").permitAll()
                 .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                 .anyRequest().authenticated()
             )

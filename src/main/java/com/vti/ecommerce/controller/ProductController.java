@@ -1,12 +1,9 @@
 package com.vti.ecommerce.controller;
 
 import com.vti.ecommerce.dto.ProductRequestDTO;
-import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.response.ResponseData;
-import com.vti.ecommerce.service.CsvService;
 import com.vti.ecommerce.service.ProductService;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,13 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/product")
@@ -30,8 +25,6 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
-    @Autowired
-    private CsvService csvService;
 
     @GetMapping("/all")
     public ResponseEntity<ResponseData> getALlProduct(@RequestParam int page){
@@ -39,8 +32,9 @@ public class ProductController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ResponseData> createProduct(@RequestBody ProductRequestDTO productRequestDTO){
-        return productService.createProduct(productRequestDTO);
+    public ResponseEntity<ResponseData> createProduct(@RequestPart("product") ProductRequestDTO productRequestDTO,
+                                                      @RequestPart("files") List<MultipartFile> files){
+        return productService.createProduct(productRequestDTO, files);
     }
 
     @PostMapping("/update/{productId}")
@@ -73,12 +67,12 @@ public class ProductController {
         return productService.getProductByCategory(categoryId, page);
     }
 
-    @GetMapping("/download-csv")
+    @GetMapping("/download-xlsx")
     public ResponseEntity<ResponseData> downloadProduct(HttpServletResponse response) {
         response.setContentType("application/octet-stream");
         String headerKey = "Content-Disposition";
         String headerValue = "attachment; filename=users.xlsx";
         response.setHeader(headerKey, headerValue);
-        return csvService.downloadProduct(response);
+        return productService.downloadProduct(response);
     }
 }

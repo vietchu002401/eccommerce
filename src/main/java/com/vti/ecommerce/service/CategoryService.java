@@ -12,7 +12,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -21,16 +23,22 @@ import java.util.Optional;
 public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
+    private FileService fileService;
 
-    public ResponseEntity<ResponseData> createCategory(CategoryDTO categoryDTO) {
+    public ResponseEntity<ResponseData> createCategory(CategoryDTO categoryDTO, MultipartFile file) {
         try {
             if (categoryRepository.existsByName(categoryDTO.getName())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "Category name is already exist", null));
             }
+            String imagePath = "";
+            if(!file.isEmpty()){
+                imagePath = fileService.save(file);
+            }
             Category category = Category.builder()
                 .name(categoryDTO.getName())
                 .description(categoryDTO.getDescription())
-                .categoryImage(categoryDTO.getCategoryImage())
+                .categoryImage(imagePath)
                 .status(categoryDTO.isStatus())
                 .createdDate(new Date())
                 .updatedDate(new Date())
@@ -114,5 +122,18 @@ public class CategoryService {
             throw new NotFoundException("Category not found");
         }
         return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categories));
+    }
+
+    public ResponseEntity<ResponseData> uploadImage(List<MultipartFile> files) {
+        try {
+            List<String> paths = new ArrayList<>();
+            for(MultipartFile file : files){
+                String path = fileService.save(file);
+                paths.add(path);
+            }
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "uploaded", paths));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
+        }
     }
 }
