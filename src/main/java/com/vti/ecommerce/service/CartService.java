@@ -1,7 +1,6 @@
 package com.vti.ecommerce.service;
 
 import com.vti.ecommerce.config.JwtService;
-import com.vti.ecommerce.dto.CartItemDTO;
 import com.vti.ecommerce.model.Cart;
 import com.vti.ecommerce.model.CartItem;
 import com.vti.ecommerce.model.Product;
@@ -19,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -36,24 +34,6 @@ public class CartService {
     private UserRepository userRepository;
     @Autowired
     private JwtService jwtService;
-
-    private List<CartItemDTO> convertToCartItemDTO(List<CartItem> cartItemList) {
-        List<CartItemDTO> cartItemDTOS = new ArrayList<>();
-        for (CartItem cartItem : cartItemList) {
-            Optional<Product> productOptional = productRepository.findById(cartItem.getProductId());
-            CartItemDTO cartItemDTO = CartItemDTO.builder()
-                    .id(cartItem.getId())
-                    .product(productOptional.isPresent() ? productOptional.get() : null)
-                    .cartId(cartItem.getCartId())
-                    .subTotal(cartItem.getSubTotal())
-                    .quantity(cartItem.getQuantity())
-                    .createdDate(cartItem.getCreatedDate())
-                    .updatedDate(cartItem.getUpdatedDate())
-                    .build();
-            cartItemDTOS.add(cartItemDTO);
-        }
-        return cartItemDTOS;
-    }
 
     public ResponseEntity<ResponseData> createCart(HttpServletRequest httpServletRequest) {
         try {

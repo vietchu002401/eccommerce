@@ -34,11 +34,7 @@ import org.springframework.web.server.ServerErrorException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -63,24 +59,23 @@ public class OrderService {
 
     private List<OrderDTO> convertToOrderDTO(List<Order> orders, List<UserPayment> userPayments) {
         List<OrderDTO> orderDTOS = new ArrayList<>();
+        Map<Long, UserPayment> userPaymentMap = new HashMap<>();
+        for (UserPayment userPayment : userPayments) {
+            userPaymentMap.put(userPayment.getId(), userPayment);
+        }
         for (Order order : orders) {
-            for (UserPayment userPayment : userPayments) {
-                if (order.getUserPaymentId().equals(userPayment.getId())) {
-                    List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
-                    OrderDTO orderDTO = OrderDTO.builder()
-                        .id(order.getId())
-                        .userId(order.getUserId())
-                        .userPayment(userPayment)
-                        .orderItemList(orderItems)
-                        .totalPrice(order.getTotalPrice())
-                        .statusShipping(order.isStatusShipping())
-                        .createdDate(order.getCreatedDate())
-                        .updatedDate(order.getUpdatedDate())
-                        .build();
-                    orderDTOS.add(orderDTO);
-                    break;
-                }
-            }
+            List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
+            OrderDTO orderDTO = OrderDTO.builder()
+                    .id(order.getId())
+                    .userId(order.getUserId())
+                    .userPayment(userPaymentMap.get(order.getUserPaymentId()))
+                    .orderItemList(orderItems)
+                    .totalPrice(order.getTotalPrice())
+                    .statusShipping(order.isStatusShipping())
+                    .createdDate(order.getCreatedDate())
+                    .updatedDate(order.getUpdatedDate())
+                    .build();
+            orderDTOS.add(orderDTO);
         }
         return orderDTOS;
     }
@@ -100,21 +95,21 @@ public class OrderService {
             }
         }
         Order order = Order.builder()
-            .userId(user.getId())
-            .userPaymentId(userPayment.getId())
-            .statusShipping(true)
-            .createdDate(new Date())
-            .updatedDate(new Date())
-            .build();
-        if(cartDTO.getCouponId() != null){
-            Coupon coupon = couponRepository.findById(cartDTO.getCouponId()).orElseThrow(()->new NotFoundException("Coupon not found"));
+                .userId(user.getId())
+                .userPaymentId(userPayment.getId())
+                .statusShipping(true)
+                .createdDate(new Date())
+                .updatedDate(new Date())
+                .build();
+        if (cartDTO.getCouponId() != null) {
+            Coupon coupon = couponRepository.findById(cartDTO.getCouponId()).orElseThrow(() -> new NotFoundException("Coupon not found"));
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
             sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
             Date expirationDate = sdf.parse(coupon.getExpirationDate());
-            if(expirationDate.before(new Date())){
+            if (expirationDate.before(new Date())) {
                 throw new ConflictException("Coupon is expirated");
             }
-            if(coupon.getMaxUsage() < 1){
+            if (coupon.getMaxUsage() < 1) {
                 throw new ConflictException("Coupon is out of limit");
             }
         }
@@ -122,37 +117,37 @@ public class OrderService {
         Double totalPrice = 0.0;
         for (CartItem cartItem : cartItemList) {
             OrderItem orderItem = OrderItem.builder()
-                .productId(cartItem.getProductId())
-                .orderId(newOrder.getId())
-                .quantity(cartItem.getQuantity())
-                .subTotal(cartItem.getSubTotal())
-                .createdDate(new Date())
-                .updatedDate(new Date())
-                .build();
+                    .productId(cartItem.getProductId())
+                    .orderId(newOrder.getId())
+                    .quantity(cartItem.getQuantity())
+                    .subTotal(cartItem.getSubTotal())
+                    .createdDate(new Date())
+                    .updatedDate(new Date())
+                    .build();
             orderItemRepository.save(orderItem);
             cartItemRepository.deleteById(cartItem.getId());
             int updated = productRepository.updateAmount(-orderItem.getQuantity(), orderItem.getProductId());
             totalPrice += orderItem.getSubTotal();
         }
-        if(cartDTO.getCouponId() != null){
-            Coupon coupon = couponRepository.findById(cartDTO.getCouponId()).orElseThrow(()->new NotFoundException("Coupon not found"));
-            coupon.setMaxUsage(coupon.getMaxUsage()-1);
+        if (cartDTO.getCouponId() != null) {
+            Coupon coupon = couponRepository.findById(cartDTO.getCouponId()).orElseThrow(() -> new NotFoundException("Coupon not found"));
+            coupon.setMaxUsage(coupon.getMaxUsage() - 1);
             couponRepository.save(coupon);
-            totalPrice = totalPrice*(100-coupon.getDiscountPercent())/100;
+            totalPrice = totalPrice * (100 - coupon.getDiscountPercent()) / 100;
         }
         newOrder.setTotalPrice(totalPrice);
         orderRepository.save(newOrder);
         List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(newOrder.getId());
         OrderDTO orderDTO = OrderDTO.builder()
-            .id(newOrder.getId())
-            .userId(newOrder.getUserId())
-            .userPayment(userPayment)
-            .orderItemList(orderItems)
-            .totalPrice(newOrder.getTotalPrice())
-            .statusShipping(newOrder.isStatusShipping())
-            .createdDate(newOrder.getCreatedDate())
-            .updatedDate(newOrder.getUpdatedDate())
-            .build();
+                .id(newOrder.getId())
+                .userId(newOrder.getUserId())
+                .userPayment(userPayment)
+                .orderItemList(orderItems)
+                .totalPrice(newOrder.getTotalPrice())
+                .statusShipping(newOrder.isStatusShipping())
+                .createdDate(newOrder.getCreatedDate())
+                .updatedDate(newOrder.getUpdatedDate())
+                .build();
         mailService.sendmail(user.getEmail(), orderDTO);
         return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Order successfully", orderDTO));
     }
@@ -166,8 +161,8 @@ public class OrderService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orderDTOS));
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 
@@ -181,20 +176,20 @@ public class OrderService {
             Optional<UserPayment> userPayment = userPaymentRepository.findById(order.getUserPaymentId());
             List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
             OrderDTO orderDTO = OrderDTO.builder()
-                .id(order.getId())
-                .userId(order.getUserId())
-                .userPayment(userPayment.get())
-                .statusShipping(order.isStatusShipping())
-                .totalPrice(order.getTotalPrice())
-                .orderItemList(orderItems)
-                .createdDate(order.getCreatedDate())
-                .updatedDate(order.getUpdatedDate())
-                .build();
+                    .id(order.getId())
+                    .userId(order.getUserId())
+                    .userPayment(userPayment.get())
+                    .statusShipping(order.isStatusShipping())
+                    .totalPrice(order.getTotalPrice())
+                    .orderItemList(orderItems)
+                    .createdDate(order.getCreatedDate())
+                    .updatedDate(order.getUpdatedDate())
+                    .build();
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orderDTO));
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 
@@ -214,8 +209,8 @@ public class OrderService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orders));
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 }

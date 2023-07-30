@@ -30,10 +30,7 @@ import org.springframework.web.server.ServerErrorException;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ProductService {
@@ -65,26 +62,25 @@ public class ProductService {
 
     private List<ProductDTO> convertToProductDTO(List<Product> products, List<Category> categories) {
         List<ProductDTO> productDTOS = new ArrayList<>();
+        Map<Long, Category> categoryMap = new HashMap<>();
+        for (Category category : categories) {
+            categoryMap.put(category.getId(), category);
+        }
         for (Product product : products) {
-            for (Category category : categories) {
-                if (product.getCategoryId() == category.getId()) {
-                    List<ProductImage> productImages = productImageRepository.findAllByProductId(product.getId());
-                    ProductDTO p = ProductDTO.builder()
-                        .id(product.getId())
-                        .name(product.getName())
-                        .price(product.getPrice())
-                        .description(product.getDescription())
-                        .amount(product.getAmount())
-                        .category(category)
-                        .status(product.isStatus())
-                        .productImages(productImages)
-                        .createdDate(product.getCreatedDate())
-                        .updatedDate(product.getUpdatedDate())
-                        .build();
-                    productDTOS.add(p);
-                    break;
-                }
-            }
+            List<ProductImage> productImages = productImageRepository.findAllByProductId(product.getId());
+            ProductDTO p = ProductDTO.builder()
+                    .id(product.getId())
+                    .name(product.getName())
+                    .price(product.getPrice())
+                    .description(product.getDescription())
+                    .amount(product.getAmount())
+                    .category(categoryMap.get(product.getCategoryId()))
+                    .status(product.isStatus())
+                    .productImages(productImages)
+                    .createdDate(product.getCreatedDate())
+                    .updatedDate(product.getUpdatedDate())
+                    .build();
+            productDTOS.add(p);
         }
         return productDTOS;
     }
@@ -98,8 +94,8 @@ public class ProductService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productDTOS));
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
         }
     }
 
@@ -111,26 +107,26 @@ public class ProductService {
             throw new NotFoundException("Category not found");
         }
         Product product = Product.builder()
-            .name(productRequestDTO.getName())
-            .price(productRequestDTO.getPrice())
-            .description(productRequestDTO.getDescription())
-            .amount(productRequestDTO.getAmount())
-            .categoryId(productRequestDTO.getCategoryId())
-            .status(productRequestDTO.isStatus())
-            .createdDate(new Date())
-            .updatedDate(new Date())
-            .build();
+                .name(productRequestDTO.getName())
+                .price(productRequestDTO.getPrice())
+                .description(productRequestDTO.getDescription())
+                .amount(productRequestDTO.getAmount())
+                .categoryId(productRequestDTO.getCategoryId())
+                .status(productRequestDTO.isStatus())
+                .createdDate(new Date())
+                .updatedDate(new Date())
+                .build();
         Product productSaved = productRepository.save(product);
         if (!files.isEmpty()) {
             for (MultipartFile file : files) {
                 String pathImage = fileService.save(file);
                 ProductImage productImage = ProductImage.builder()
-                    .productId(productSaved.getId())
-                    .sourceImage(pathImage)
-                    .status(true)
-                    .createdDate(new Date())
-                    .updatedDate(new Date())
-                    .build();
+                        .productId(productSaved.getId())
+                        .sourceImage(pathImage)
+                        .status(true)
+                        .createdDate(new Date())
+                        .updatedDate(new Date())
+                        .build();
                 productImageRepository.save(productImage);
             }
         }
@@ -152,16 +148,16 @@ public class ProductService {
                     }
                 }
                 Product productUpdate = Product.builder()
-                    .id(product.getId())
-                    .name(productRequestDTO.getName())
-                    .price(productRequestDTO.getPrice())
-                    .description(productRequestDTO.getDescription())
-                    .amount(productRequestDTO.getAmount())
-                    .categoryId(productRequestDTO.getCategoryId())
-                    .status(productRequestDTO.isStatus())
-                    .createdDate(product.getCreatedDate())
-                    .updatedDate(new Date())
-                    .build();
+                        .id(product.getId())
+                        .name(productRequestDTO.getName())
+                        .price(productRequestDTO.getPrice())
+                        .description(productRequestDTO.getDescription())
+                        .amount(productRequestDTO.getAmount())
+                        .categoryId(productRequestDTO.getCategoryId())
+                        .status(productRequestDTO.isStatus())
+                        .createdDate(product.getCreatedDate())
+                        .updatedDate(new Date())
+                        .build();
                 Product productSaved = productRepository.save(productUpdate);
                 for (ProductImage productImage : productRequestDTO.getProductImages()) {
                     if (productImage.getId() == null) {
@@ -191,8 +187,8 @@ public class ProductService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Product not found", null));
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
         }
     }
 
@@ -206,8 +202,8 @@ public class ProductService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", productOptional.get()));
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
         }
     }
 
@@ -219,24 +215,24 @@ public class ProductService {
                 Optional<Category> category = categoryRepository.findById(product.getCategoryId());
                 List<ProductImage> productImages = productImageRepository.findAllByProductId(productId);
                 ProductDTO productDTO = ProductDTO.builder()
-                    .id(product.getId())
-                    .name(product.getName())
-                    .price(product.getPrice())
-                    .description(product.getDescription())
-                    .amount(product.getAmount())
-                    .category(category.get())
-                    .productImages(productImages)
-                    .status(product.isStatus())
-                    .createdDate(product.getCreatedDate())
-                    .updatedDate(product.getUpdatedDate())
-                    .build();
+                        .id(product.getId())
+                        .name(product.getName())
+                        .price(product.getPrice())
+                        .description(product.getDescription())
+                        .amount(product.getAmount())
+                        .category(category.get())
+                        .productImages(productImages)
+                        .status(product.isStatus())
+                        .createdDate(product.getCreatedDate())
+                        .updatedDate(product.getUpdatedDate())
+                        .build();
                 return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productDTO));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Product not found", null));
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
         }
     }
 
@@ -260,8 +256,8 @@ public class ProductService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productDTOS));
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
         }
     }
 
@@ -281,7 +277,7 @@ public class ProductService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Active successfully", productRepository.save(p)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 
