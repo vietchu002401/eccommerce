@@ -1,6 +1,10 @@
 package com.vti.ecommerce.service;
 
 import com.vti.ecommerce.config.JwtService;
+import com.vti.ecommerce.exception.BadRequestException;
+import com.vti.ecommerce.exception.ConflictException;
+import com.vti.ecommerce.exception.NotFoundException;
+import com.vti.ecommerce.exception.ServerErrorException;
 import com.vti.ecommerce.model.Cart;
 import com.vti.ecommerce.model.CartItem;
 import com.vti.ecommerce.model.Product;
@@ -39,16 +43,9 @@ public class CartService {
         try {
             String token = httpServletRequest.getHeader("Authorization").substring(7);
             String username = jwtService.extractUsername(token);
-            Optional<User> userOptional = userRepository.findByUsername(username);
-            if(userOptional.isEmpty()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User not found", null));
-            }
-            User user = userOptional.get();
+            User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
             if (cartRepository.existsByUserId(user.getId())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "This user is already have a cart", null));
-            }
-            if (!userRepository.existsById(user.getId())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, "This user not found", null));
+                throw new ConflictException("This user is already have a cart");
             }
             Cart cart = Cart.builder()
                 .userId(user.getId())
@@ -57,10 +54,10 @@ public class CartService {
                 .updatedDate(new Date())
                 .build();
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created cart", cartRepository.save(cart)));
+        } catch (NotFoundException | ConflictException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
@@ -68,29 +65,19 @@ public class CartService {
         try {
             String token = httpServletRequest.getHeader("Authorization").substring(7);
             String username = jwtService.extractUsername(token);
-            Optional<User> userOptional = userRepository.findByUsername(username);
-            if(userOptional.isEmpty()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User not found", null));
-            }
-            if(!cartRepository.existsByUserId(userOptional.get().getId())){
+            User user = userRepository.findByUsername(username).orElseThrow(()-> new NotFoundException("User not found"));
+            if (!cartRepository.existsByUserId(user.getId())) {
                 Cart cart = Cart.builder()
-                    .userId(userOptional.get().getId())
+                    .userId(user.getId())
                     .status(true)
                     .createdDate(new Date())
                     .updatedDate(new Date())
                     .build();
                 cartRepository.save(cart);
             }
-            Optional<Cart> cartOptional = cartRepository.findByUserId(userOptional.get().getId());
-            if(cartOptional.isEmpty()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart not found", null));
-            }
-            Long cartId = cartOptional.get().getId();
-            Optional<Product> productOptional = productRepository.findById(productId);
-            if (productOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Product not found", null));
-            }
-            Product product = productOptional.get();
+            Cart cart = cartRepository.findByUserId(user.getId()).orElseThrow(()-> new NotFoundException("Cart not found"));
+            Long cartId = cart.getId();
+            Product product = productRepository.findById(productId).orElseThrow(()-> new NotFoundException("Product not found"));
             Optional<CartItem> cartItemOptional = cartItemRepository.findByProductIdAndCartId(productId, cartId);
             if (cartItemOptional.isPresent()) {
                 CartItem c = cartItemOptional.get();
@@ -98,26 +85,26 @@ public class CartService {
                 c.setSubTotal(c.getSubTotal() + product.getPrice());
                 c.setUpdatedDate(new Date());
                 if (product.getAmount() < c.getQuantity()) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, "The product has only " + product.getAmount() + " items left", null));
+                    throw new BadRequestException("The product has only " + product.getAmount() + " items left");
                 }
                 return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Add successfully", cartItemRepository.save(c)));
             }
             if (product.getAmount() < 1) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, "The product has only " + product.getAmount() + " items left", null));
+                throw new BadRequestException("The product has only " + product.getAmount() + " items left");
             }
             CartItem cartItem = CartItem.builder()
-                    .subTotal(product.getPrice())
-                    .createdDate(new Date())
-                    .updatedDate(new Date())
-                    .productId(productId)
-                    .status(true)
-                    .quantity(1)
-                    .cartId(cartId).build();
+                .subTotal(product.getPrice())
+                .createdDate(new Date())
+                .updatedDate(new Date())
+                .productId(productId)
+                .status(true)
+                .quantity(1)
+                .cartId(cartId).build();
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Add successfully", cartItemRepository.save(cartItem)));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+        } catch (BadRequestException | NotFoundException e) {
+            throw e;
+        }catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
@@ -131,12 +118,12 @@ public class CartService {
             String token = httpServletRequest.getHeader("Authorization").substring(7);
             String username = jwtService.extractUsername(token);
             Optional<User> userOptional = userRepository.findByUsername(username);
-            if(userOptional.isEmpty()){
+            if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User not found", null));
             }
             User user = userOptional.get();
             Optional<Cart> cartOptional = cartRepository.findByUserId(user.getId());
-            if(cartOptional.isEmpty()){
+            if (cartOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart not found", null));
             }
             Cart cart = cartOptional.get();
@@ -145,8 +132,8 @@ public class CartService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Delete successfully", cartItemList));
         } catch (Exception e) {
             return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 
@@ -160,8 +147,8 @@ public class CartService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", cart));
         } catch (Exception e) {
             return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 
@@ -170,12 +157,12 @@ public class CartService {
             String token = httpServletRequest.getHeader("Authorization").substring(7);
             String username = jwtService.extractUsername(token);
             Optional<User> userOptional = userRepository.findByUsername(username);
-            if(userOptional.isEmpty()){
+            if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User not found", null));
             }
             User user = userOptional.get();
             Optional<Cart> cartOptional = cartRepository.findByUserId(user.getId());
-            if(cartOptional.isEmpty()){
+            if (cartOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Cart not found", null));
             }
             Cart cart = cartOptional.get();
@@ -184,23 +171,23 @@ public class CartService {
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", cartItemList));
         } catch (Exception e) {
             return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 
     public ResponseEntity<ResponseData> updateQuantity(CartItem cartItem) {
         try {
             Optional<Product> productOptional = productRepository.findWhereAmountNotEnough(cartItem.getProductId(), cartItem.getQuantity());
-            if(productOptional.isPresent()){
+            if (productOptional.isPresent()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseData(HttpStatus.BAD_REQUEST, productOptional.get().getName() + " has only " + productOptional.get().getAmount() + " items left!", null));
             }
             cartItemRepository.updateQuantity(cartItem.getQuantity(), cartItem.getId());
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "updated quantity", cartItemRepository.findById(cartItem.getId())));
         } catch (Exception e) {
             return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 }

@@ -2,6 +2,8 @@ package com.vti.ecommerce.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -42,7 +44,14 @@ public class Coupon {
     @Column(name = "expiration_date")
     private String expirationDate;
 
+    @NotNull
+    @Column(name = "min_total_price")
+    private Double minTotalPrice;
+
     private boolean status;
+
+    @Enumerated(EnumType.STRING)
+    private CouponType couponType;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_date")
