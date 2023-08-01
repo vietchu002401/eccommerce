@@ -263,7 +263,9 @@ public class ProductService {
 
     public ResponseEntity<ResponseData> getBestSeller() throws ServerErrorException {
         List<Product> products = productRepository.findBestSeller();
-        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", products));
+        List<Category> categories = categoryRepository.findAll();
+        List<ProductDTO> productDTOS = convertToProductDTO(products, categories);
+        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productDTOS));
     }
 
     public ResponseEntity<ResponseData> activeProduct(Long productId) {
