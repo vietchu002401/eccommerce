@@ -1,5 +1,8 @@
 package com.vti.ecommerce.service;
 
+import com.vti.ecommerce.exception.ConflictException;
+import com.vti.ecommerce.exception.NotFoundException;
+import com.vti.ecommerce.exception.ServerErrorException;
 import com.vti.ecommerce.model.ProductImage;
 import com.vti.ecommerce.repository.ProductImageRepository;
 import com.vti.ecommerce.response.ResponseData;
@@ -21,49 +24,47 @@ public class ProductImageService {
 
 
     public ResponseEntity<ResponseData> createProductImage(ProductImage productImage) {
-        try{
-            if(productImageRepository.existsBySourceImage(productImage.getSourceImage())){
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        try {
+            if (productImageRepository.existsBySourceImage(productImage.getSourceImage())) {
+                throw new ConflictException("This image is already exist");
             }
             productImage.setCreatedDate(new Date());
             productImage.setUpdatedDate(new Date());
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created product image", productImageRepository.save(productImage)));
-        }catch (Exception e){
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+        } catch (ConflictException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> getProductImage(Long productId, int page) {
-        try{
+        try {
             Pageable pageable = PageRequest.of(page, 8);
             List<ProductImage> productImages = productImageRepository.findByProductIdPage(productId, pageable);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", productImages));
-        }catch (Exception e){
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> updateProductImage(Long productImageId, ProductImage productImage) {
-        try{
+        try {
             Optional<ProductImage> productImageOptional = productImageRepository.findById(productImageId);
-            if(productImageOptional.isPresent()){
+            if (productImageOptional.isPresent()) {
                 ProductImage p = productImageOptional.get();
-                if(p.getSourceImage().equals(productImage.getSourceImage())){
-                    if(productImageRepository.existsBySourceImage(productImage.getSourceImage())){
+                if (p.getSourceImage().equals(productImage.getSourceImage())) {
+                    if (productImageRepository.existsBySourceImage(productImage.getSourceImage())) {
                         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "Url is already exist", productImage));
                     }
                 }
                 p.setSourceImage(productImage.getSourceImage());
                 p.setProductId(productImage.getProductId());
                 p.setUpdatedDate(new Date());
-                return ResponseEntity.ok(new ResponseData(HttpStatus.CONFLICT, "Updated",productImageRepository.save(p)));
+                return ResponseEntity.ok(new ResponseData(HttpStatus.CONFLICT, "Updated", productImageRepository.save(p)));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
@@ -71,16 +72,16 @@ public class ProductImageService {
     }
 
     public ResponseEntity<ResponseData> deleteProductImage(Long productImageId) {
-        try{
-            if(!productImageRepository.existsById(productImageId)){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Image id not found", productImageId));
+        try {
+            if (!productImageRepository.existsById(productImageId)) {
+                throw new NotFoundException("Image id not found");
             }
             productImageRepository.deleteById(productImageId);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", productImageId));
-        }catch (Exception e){
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
     }
 }

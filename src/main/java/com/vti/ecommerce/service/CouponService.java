@@ -137,7 +137,7 @@ public class CouponService {
             couponRepository.deleteById(couponId);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.vti.ecommerce.service;
 
 import com.vti.ecommerce.dto.CategoryDTO;
+import com.vti.ecommerce.exception.ConflictException;
 import com.vti.ecommerce.exception.NotFoundException;
 import com.vti.ecommerce.exception.ServerErrorException;
 import com.vti.ecommerce.model.Category;
@@ -14,10 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CategoryService {
@@ -29,10 +28,10 @@ public class CategoryService {
     public ResponseEntity<ResponseData> createCategory(CategoryDTO categoryDTO, MultipartFile file) {
         try {
             if (categoryRepository.existsByName(categoryDTO.getName())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "Category name is already exist", null));
+                throw new ConflictException("Category name is already exist");
             }
             String imagePath = "";
-            if(!file.isEmpty()){
+            if (!file.isEmpty()) {
                 imagePath = fileService.save(file);
             }
             Category category = Category.builder()
@@ -44,62 +43,55 @@ public class CategoryService {
                 .updatedDate(new Date())
                 .build();
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created category", categoryRepository.save(category)));
+        } catch (ConflictException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> updateCategory(Long categoryId, CategoryDTO categoryDTO) {
         try {
-            Optional<Category> categoryOptional = categoryRepository.findById(categoryId);
-            if(categoryOptional.isPresent()){
-              Category category = categoryOptional.get();
-              if(!category.getName().equals(categoryDTO.getName())){
-                  if (categoryRepository.existsByName(categoryDTO.getName())) {
-                      return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "This name is already exist", categoryDTO));
-                  }
-              }
-              category.setName(categoryDTO.getName());
-              category.setCategoryImage(categoryDTO.getCategoryImage());
-              category.setDescription(categoryDTO.getDescription());
-              category.setUpdatedDate(new Date());
-              return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Updated", categoryRepository.save(category)));
+            Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new NotFoundException("Category not found"));
+            if (!category.getName().equals(categoryDTO.getName())) {
+                if (categoryRepository.existsByName(categoryDTO.getName())) {
+                    throw new ConflictException("Category name is already exist");
+                }
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Category not found", null));
+            category.setName(categoryDTO.getName());
+            category.setCategoryImage(categoryDTO.getCategoryImage());
+            category.setDescription(categoryDTO.getDescription());
+            category.setUpdatedDate(new Date());
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Updated", categoryRepository.save(category)));
+        } catch (NotFoundException | ConflictException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> deleteCategory(Long categoryId) {
         try {
-            if(categoryRepository.existsById(categoryId)){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Category not found", null));
+            if (categoryRepository.existsById(categoryId)) {
+                throw new NotFoundException("Category not found");
             }
             categoryRepository.deleteById(categoryId);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", categoryId));
+        } catch (NotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> getCategoryDetail(Long categoryId) {
         try {
-            Optional<Category> categoryOptional = categoryRepository.findById(categoryId);
-            if(categoryOptional.isEmpty()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Category not found", null));
-            }
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categoryOptional.get()));
+            Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new NotFoundException("Category not found"));
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", category));
+        } catch (NotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
@@ -109,31 +101,22 @@ public class CategoryService {
             List<Category> categories = categoryRepository.searchCategoriesByKeyword(q, pageable);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categories));
         } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
-    public ResponseEntity<ResponseData> getAllCategory(int page) throws ServerErrorException {
-        Pageable pageable = PageRequest.of(page, 8);
-        List<Category> categories = categoryRepository.findAllWithPage(pageable);
-        if(categories.size() == 0){
-            throw new NotFoundException("Category not found");
-        }
-        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categories));
-    }
-
-    public ResponseEntity<ResponseData> uploadImage(List<MultipartFile> files) {
+    public ResponseEntity<ResponseData> getAllCategory(int page) {
         try {
-            List<String> paths = new ArrayList<>();
-            for(MultipartFile file : files){
-                String path = fileService.save(file);
-                paths.add(path);
+            Pageable pageable = PageRequest.of(page, 8);
+            List<Category> categories = categoryRepository.findAllWithPage(pageable);
+            if (categories.isEmpty()) {
+                throw new NotFoundException("Category not found");
             }
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "uploaded", paths));
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", categories));
+        } catch (NotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 }

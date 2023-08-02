@@ -175,25 +175,19 @@ public class OrderService {
             List<OrderDTO> orderDTOS = convertToOrderDTO(orders, userPayments);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orderDTOS));
         } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> getOrderDetail(Long orderId) {
         try {
-            Optional<Order> orderOptional = orderRepository.findById(orderId);
-            if (orderOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "Order not found", null));
-            }
-            Order order = orderOptional.get();
-            Optional<UserPayment> userPayment = userPaymentRepository.findById(order.getUserPaymentId());
+            Order order = orderRepository.findById(orderId).orElseThrow(() -> new NotFoundException("Order not found"));
+            UserPayment userPayment = userPaymentRepository.findById(order.getUserPaymentId()).orElseThrow(() -> new NotFoundException("User payment not found"));
             List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
             OrderDTO orderDTO = OrderDTO.builder()
                 .id(order.getId())
                 .userId(order.getUserId())
-                .userPayment(userPayment.get())
+                .userPayment(userPayment)
                 .statusShipping(order.isStatusShipping())
                 .totalPrice(order.getTotalPrice())
                 .orderItemList(orderItems)
@@ -201,10 +195,10 @@ public class OrderService {
                 .updatedDate(order.getUpdatedDate())
                 .build();
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orderDTO));
+        } catch (NotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
@@ -212,20 +206,16 @@ public class OrderService {
         try {
             String token = request.getHeader("Authorization").substring(7);
             String username = jwtService.extractUsername(token);
-            Optional<User> userOptional = userRepository.findByUsername(username);
-            if (userOptional.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "user not found", null));
-            }
-            User user = userOptional.get();
+            User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("user not found"));
             Pageable pageable = PageRequest.of(page, 8);
             List<Order> orders = orderRepository.findByUserId(user.getId(), pageable);
 //            List<UserPayment> userPayments = userPaymentRepository.findAll();
 //            List<OrderDTO> orderDTOS = convertToOrderDTO(orders, userPayments);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", orders));
+        } catch (NotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+            throw new ServerErrorException(e.getMessage());
         }
     }
 }

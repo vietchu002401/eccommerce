@@ -22,28 +22,40 @@ public class CustomerService {
     @Autowired
     private UserRepository userRepository;
 
-    public ResponseEntity<ResponseData> getUserInfo(HttpServletRequest request) throws ServerErrorException {
-        String token = request.getHeader("Authorization").substring(7);
-        String username = jwtService.extractUsername(token);
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
-        UserDTO userDTO = UserDTO.builder()
-            .id(user.getId())
-            .username(user.getUsername())
-            .status(user.isStatus())
-            .phone(user.getPhone())
-            .email(user.getEmail())
-            .createdDate(user.getCreatedDate())
-            .updatedDate(user.getUpdatedDate())
-            .build();
-        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", userDTO));
+    public ResponseEntity<ResponseData> getUserInfo(HttpServletRequest request) {
+        try {
+            String token = request.getHeader("Authorization").substring(7);
+            String username = jwtService.extractUsername(token);
+            User user = userRepository.findByUsername(username).orElseThrow(() -> new NotFoundException("User not found"));
+            UserDTO userDTO = UserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .status(user.isStatus())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .createdDate(user.getCreatedDate())
+                .updatedDate(user.getUpdatedDate())
+                .build();
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", userDTO));
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
+        }
     }
 
-    public ResponseEntity<ResponseData> editProfile(UserDTO userDTO) throws ServerErrorException {
-        User user = userRepository.findById(userDTO.getId()).orElseThrow(() -> new NotFoundException("User not found"));
-        user.setAddress(user.getAddress());
-        user.setPhone(user.getPhone());
-        user.setEmail(user.getEmail());
-        user.setUpdatedDate(new Date());
-        return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Updated", userRepository.save(user)));
+    public ResponseEntity<ResponseData> editProfile(UserDTO userDTO) {
+        try {
+            User user = userRepository.findById(userDTO.getId()).orElseThrow(() -> new NotFoundException("User not found"));
+            user.setAddress(user.getAddress());
+            user.setPhone(user.getPhone());
+            user.setEmail(user.getEmail());
+            user.setUpdatedDate(new Date());
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Updated", userRepository.save(user)));
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
+        }
     }
 }

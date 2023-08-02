@@ -1,5 +1,8 @@
 package com.vti.ecommerce.service;
 
+import com.vti.ecommerce.exception.ConflictException;
+import com.vti.ecommerce.exception.NotFoundException;
+import com.vti.ecommerce.exception.ServerErrorException;
 import com.vti.ecommerce.model.UserPayment;
 import com.vti.ecommerce.repository.UserPaymentRepository;
 import com.vti.ecommerce.response.ResponseData;
@@ -9,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.Optional;
 
 @Service
 public class UserPaymentService {
@@ -18,61 +20,51 @@ public class UserPaymentService {
 
 
     public ResponseEntity<ResponseData> createUserPayment(UserPayment userPayment) {
-        try{
-            if(userPaymentRepository.existsByUserId(userPayment.getUserId())){
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseData(HttpStatus.CONFLICT, "User payment is already exist", null));
+        try {
+            if (userPaymentRepository.existsByUserId(userPayment.getUserId())) {
+                throw new ConflictException("User is already have payment");
             }
             userPayment.setCreatedDate(new Date());
             userPayment.setUpdatedDate(new Date());
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created user payment", userPaymentRepository.save(userPayment)));
-        }catch (Exception e){
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        } catch (ConflictException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> updateUserPayment(UserPayment userPayment) {
-        try{
-            Optional<UserPayment> userPaymentOptional = userPaymentRepository.findById(userPayment.getId());
-            if(userPaymentOptional.isEmpty()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User payment not found", null));
-            }
-            UserPayment u = userPaymentOptional.get();
+        try {
+            UserPayment u = userPaymentRepository.findById(userPayment.getId()).orElseThrow(() -> new NotFoundException("User payment not found"));
             u.setNumberCart(userPayment.getNumberCart());
             u.setProvider(userPayment.getProvider());
             u.setUpdatedDate(new Date());
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Updated user payment", userPaymentRepository.save(u)));
-        }catch (Exception e){
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> deleteUserPayment(Long userPaymentId) {
-        try{
+        try {
             userPaymentRepository.deleteById(userPaymentId);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Deleted", null));
-        }catch (Exception e){
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
     }
 
     public ResponseEntity<ResponseData> getUserPaymentDetail(Long userPaymentId) {
-        try{
-            Optional<UserPayment> userPaymentOptional = userPaymentRepository.findById(userPaymentId);
-            if(userPaymentOptional.isEmpty()){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseData(HttpStatus.NOT_FOUND, "User payment not found", null));
-            }
-            UserPayment userPayment = userPaymentOptional.get();
+        try {
+            UserPayment userPayment = userPaymentRepository.findById(userPaymentId).orElseThrow(() -> new NotFoundException("User payment not found"));
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Request successfully", userPayment));
-        }catch (Exception e){
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", null));
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
     }
 }
