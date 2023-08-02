@@ -3,8 +3,10 @@ package com.vti.ecommerce.service;
 import com.vti.ecommerce.exception.ConflictException;
 import com.vti.ecommerce.exception.NotFoundException;
 import com.vti.ecommerce.exception.ServerErrorException;
+import com.vti.ecommerce.model.Product;
 import com.vti.ecommerce.model.ProductImage;
 import com.vti.ecommerce.repository.ProductImageRepository;
+import com.vti.ecommerce.repository.ProductRepository;
 import com.vti.ecommerce.response.ResponseData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -12,7 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -21,17 +25,28 @@ import java.util.Optional;
 public class ProductImageService {
     @Autowired
     private ProductImageRepository productImageRepository;
+    @Autowired
+    private ProductRepository productRepository;
+    @Autowired
+    private FileService fileService;
 
 
-    public ResponseEntity<ResponseData> createProductImage(ProductImage productImage) {
+    public ResponseEntity<ResponseData> createProductImage(Long productId, List<MultipartFile> files) {
         try {
-            if (productImageRepository.existsBySourceImage(productImage.getSourceImage())) {
-                throw new ConflictException("This image is already exist");
+            Product product = productRepository.findById(productId).orElseThrow(()->new NotFoundException("Product not found"));
+            List<ProductImage> productImages = new ArrayList<>();
+            for(MultipartFile file : files){
+                String pathName = fileService.save(file);
+                ProductImage productImage = ProductImage.builder()
+                    .sourceImage(pathName)
+                    .createdDate(new Date())
+                    .productId(product.getId())
+                    .updatedDate(new Date())
+                    .build();
+                productImages.add(productImageRepository.save(productImage));
             }
-            productImage.setCreatedDate(new Date());
-            productImage.setUpdatedDate(new Date());
-            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created product image", productImageRepository.save(productImage)));
-        } catch (ConflictException e) {
+            return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created product image", productImages));
+        } catch (NotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new ServerErrorException(e.getMessage());
