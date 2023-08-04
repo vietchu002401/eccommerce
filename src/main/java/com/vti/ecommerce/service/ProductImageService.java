@@ -1,6 +1,5 @@
 package com.vti.ecommerce.service;
 
-import com.vti.ecommerce.exception.ConflictException;
 import com.vti.ecommerce.exception.NotFoundException;
 import com.vti.ecommerce.exception.ServerErrorException;
 import com.vti.ecommerce.model.Product;
@@ -33,16 +32,17 @@ public class ProductImageService {
 
     public ResponseEntity<ResponseData> createProductImage(Long productId, List<MultipartFile> files) {
         try {
-            Product product = productRepository.findById(productId).orElseThrow(()->new NotFoundException("Product not found"));
+            Product product = productRepository.findById(productId).orElseThrow(() -> new NotFoundException("Product not found"));
             List<ProductImage> productImages = new ArrayList<>();
-            for(MultipartFile file : files){
+            for (MultipartFile file : files) {
                 String pathName = fileService.save(file);
                 ProductImage productImage = ProductImage.builder()
-                    .sourceImage(pathName)
-                    .createdDate(new Date())
-                    .productId(product.getId())
-                    .updatedDate(new Date())
-                    .build();
+                        .sourceImage(pathName)
+                        .createdDate(new Date())
+                        .productId(product.getId())
+                        .updatedDate(new Date())
+                        .status(true)
+                        .build();
                 productImages.add(productImageRepository.save(productImage));
             }
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created product image", productImages));
@@ -81,8 +81,8 @@ public class ProductImageService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseData(HttpStatus.INTERNAL_SERVER_ERROR, "Server error", null));
         }
     }
 

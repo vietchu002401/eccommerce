@@ -1,13 +1,10 @@
 package com.vti.ecommerce.service;
 
 import com.vti.ecommerce.exception.ConflictException;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,7 +32,7 @@ public class FileService {
             if (e instanceof FileAlreadyExistsException) {
 //                String fileName = file.getOriginalFilename();
 //                return "/uploads/" + fileName;
-                throw new ConflictException("This image name is already exist");
+                throw new ConflictException("This file name is already exist");
             }
 
             throw new RuntimeException(e.getMessage());
