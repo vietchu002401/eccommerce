@@ -138,6 +138,8 @@ public class ProductService {
             products.add(productSaved);
             List<ProductDTO> productDTOS = convertToProductDTO(products, categories);
             return ResponseEntity.ok(new ResponseData(HttpStatus.OK, "Created new product", productDTOS));
+        } catch (ConflictException | NotFoundException e) {
+            throw e;
         } catch (Exception e) {
             throw new ServerErrorException(e.getMessage());
         }
